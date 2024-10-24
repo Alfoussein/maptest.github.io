@@ -215,6 +215,7 @@ document.querySelector('#csvFileInput').addEventListener('change', function(even
 // Gestion de l'extraction de texte à partir d'images avec Tesseract.js
 document.querySelector('#imageFileInput').addEventListener('change', function(event) {
     const files = event.target.files; // Récupère tous les fichiers sélectionnés
+<<<<<<< HEAD
     let combinedText = ''; // Accumulateur pour le texte extrait
 
     if (files.length > 0) {
@@ -225,10 +226,25 @@ document.querySelector('#imageFileInput').addEventListener('change', function(ev
             ).then(({ data: { text } }) => {
                 console.log(text); // Affiche le texte extrait dans la console
                 combinedText += text + '\n'; // Ajoute le texte extrait à l'accumulateur
+=======
+    if (files.length > 0) {
+        Array.from(files).forEach(file => {
+            Tesseract.recognize(
+                file,
+                'eng', // Définir la langue pour l'OCR
+                {
+                    logger: m => console.log(m) // Optionnel : affiche la progression
+                }
+            ).then(({ data: { text } }) => {
+                console.log(text); // Affiche le texte extrait dans la console
+                document.querySelector('#extractedText').innerText += text + '\n'; // Affiche le texte extrait dans l'élément de la page
+                processRecognizedText(text); // Appel à la fonction pour traiter le texte reconnu
+>>>>>>> df02d11233486422eb04c36cb0ebfde0cd489de1
             }).catch(err => {
                 console.error('Erreur lors de l\'extraction du texte:', err);
             });
         });
+<<<<<<< HEAD
 
         // Une fois que toutes les promesses sont résolues, traiter le texte combiné
         Promise.all(promises).then(() => {
@@ -255,14 +271,33 @@ function processRecognizedText(recognizedText) {
         const titleMatch = line.match(fullNameWithTitleRegex);
         
         if (titleMatch) {
+=======
+    }
+});
+
+
+// Fonction pour traiter le texte reconnu
+function processRecognizedText(recognizedText) {
+    console.log("called process");
+    const lines = recognizedText.split('\n');
+    lines.forEach(line => {
+        const titleMatch = line.match(fullNameWithTitleRegex);
+        if (titleMatch) {
+            console.log("called process");
+>>>>>>> df02d11233486422eb04c36cb0ebfde0cd489de1
             _fullNames.push(titleMatch[0].trim());
         }
 
         // Recherche des adresses
         addressKeywords.forEach(keyword => {
             if (line.toLowerCase().includes(keyword)) {
+<<<<<<< HEAD
                 // Enlève caractères spéciaux
                 const address = cleanAddress(line.trim());
+=======
+                const address = cleanAddress(line.trim()); 
+                console.log(keyword);
+>>>>>>> df02d11233486422eb04c36cb0ebfde0cd489de1
                 _addresses.push(address);
             }
         });
@@ -279,4 +314,8 @@ function processRecognizedText(recognizedText) {
                 console.error(`Erreur lors du géocodage de l'adresse ${address}:`, error);
             });
     });
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> df02d11233486422eb04c36cb0ebfde0cd489de1
