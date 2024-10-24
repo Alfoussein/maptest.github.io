@@ -1,7 +1,6 @@
 //var apiKey = 'de012302a8b6464691dbd1df48f474fe';
 //var apiKey = 'fc1af9eaec3c47c9b31d0dd09e0dc933';
 
-// Initialise la carte centrée sur une position par défaut
 var map = L.map('map').setView([48.8566, 2.3522], 12); // Coordonnées pour centrer sur la France
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -9,12 +8,33 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 var apiKey = 'fc1af9eaec3c47c9b31d0dd09e0dc933';
-
 var selectedAddresses = [];
 var selectedCol2Values = [];
 var markers = [];
 var selectedAddressesStorage = [];
 
+const fullNameWithTitleRegex = /(Mme\/m|M|Mme)\s+([A-ZÀ-ÿ][a-zà-ÿ]+(?:\s+[A-ZÀ-ÿ][a-zà-ÿ]+)*)/g;
+
+const ocrResult = `Mme/m MEDZA JACQUES
+Mme/m GRANEL JULIEN
+Mme/m ADRIEN FARRANDS
+Mme/m Elsa Rouiller`;
+
+// Liste des mots-clés d'adresse
+const addressKeywords = [
+    'rue', 'avenue', 'boulevard', 'place', 'chemin', 'route',
+    'square', 'impasse', 'allée', 'esplanade'
+];
+
+// Listes pour stocker les noms complets et les adresses
+const _fullNames = [];
+const _addresses = [];
+const _mapPoints = [];
+const _selectedMarkers = [];
+
+function cleanAddress(address) {
+    return address.replace(/[“”>]/g, '').trim(); // Supprime les “, ” et >
+}
 function getCoordinates(address) {
     return fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(address)}&key=${apiKey}`)
         .then(response => response.json())
@@ -28,6 +48,7 @@ function getCoordinates(address) {
 }
 
 function addMarkerToMap(info, col2, coordinates) {
+    
     if (selectedAddresses.length >= 9) {
         alert("Vous avez déjà sélectionné 9 adresses. Veuillez annuler une sélection avant d'en ajouter d'autres.");
         return;
@@ -39,7 +60,7 @@ function addMarkerToMap(info, col2, coordinates) {
     marker.on('click', function() {
         marker.setIcon(L.icon({
             iconUrl: 'https://cdn-icons-png.flaticon.com/512/64/64572.png',
-            iconSize: [25, 21],
+            iconSize: [25, 41],
             iconAnchor: [12, 41],
             popupAnchor: [1, -34],
         }));
@@ -50,8 +71,11 @@ function addMarkerToMap(info, col2, coordinates) {
 
         document.querySelector('#undoButton').disabled = false;
 
+        
+
         if (selectedAddresses.length === 9) {
             if (confirm("Vous avez sélectionné 9 adresses. Voulez-vous continuer ?")) {
+                console.log("popopopopopop")
                 // Supprime les marqueurs de la carte après confirmation
                 markers.forEach(marker => {
                     map.removeLayer(marker);
@@ -68,7 +92,7 @@ function addMarkerToMap(info, col2, coordinates) {
                 markers.forEach(marker => {
                     marker.setIcon(L.icon({
                         iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-                        iconSize: [25, 21],
+                        iconSize: [25, 41],
                         iconAnchor: [12, 41],
                         popupAnchor: [1, -34],
                     }));
@@ -81,7 +105,6 @@ function addMarkerToMap(info, col2, coordinates) {
         }
     });
 }
-
 
 function undoSelection() {
     if (selectedAddressesStorage.length > 0) {
@@ -113,11 +136,22 @@ function undoSelection() {
                                 popupAnchor: [1, -34],
                             }));
                             selectedAddresses.push(address);
-                            // Ajoutez ici la logique pour ajouter la valeur de col2 si nécessaire
                         });
                     }
                 });
         });
+
+        // Suppression du dernier div d'URL générée (si présent)
+        var googleMapsUrlsDiv = document.querySelector('#googleMapsUrls');
+        if (googleMapsUrlsDiv.lastChild) {
+            googleMapsUrlsDiv.removeChild(googleMapsUrlsDiv.lastChild);
+        }
+
+        // Suppression du dernier div de valeurs concaténées de la colonne 2 (si présent)
+        var concatCol2Div = document.querySelector('#concatCol2Container');
+        if (concatCol2Div.lastChild) {
+            concatCol2Div.removeChild(concatCol2Div.lastChild);
+        }
 
         // Gestion de l'activation/désactivation du bouton undo
         if (selectedAddressesStorage.length === 0) {
@@ -125,8 +159,6 @@ function undoSelection() {
         }
     }
 }
-
-
 
 function generateGoogleMapsUrl() {
     var urlBase = "https://www.google.fr/maps/dir/";
@@ -178,3 +210,73 @@ document.querySelector('#csvFileInput').addEventListener('change', function(even
         }
     });
 });
+
+// Gestion de l'extraction de texte à partir d'une image avec Tesseract.js
+// Gestion de l'extraction de texte à partir d'images avec Tesseract.js
+document.querySelector('#imageFileInput').addEventListener('change', function(event) {
+    const files = event.target.files; // Récupère tous les fichiers sélectionnés
+    let combinedText = ''; // Accumulateur pour le texte extrait
+
+    if (files.length > 0) {
+        const promises = Array.from(files).map(file => {
+            return Tesseract.recognize(
+                file,
+                'eng', // Définir la langue pour l'OCR
+            ).then(({ data: { text } }) => {
+                console.log(text); // Affiche le texte extrait dans la console
+                combinedText += text + '\n'; // Ajoute le texte extrait à l'accumulateur
+            }).catch(err => {
+                console.error('Erreur lors de l\'extraction du texte:', err);
+            });
+        });
+
+        // Une fois que toutes les promesses sont résolues, traiter le texte combiné
+        Promise.all(promises).then(() => {
+            processRecognizedText(combinedText); // Appel à la fonction pour traiter le texte reconnu
+        });
+    }
+});
+
+// Fonction pour traiter le texte reconnu
+function processRecognizedText(recognizedText) {
+    const lines = recognizedText.split('\n');
+    console.log(lines);
+    const selectedPreviousElements = lines.filter((line, index, array) => {
+        if (array[index + 2] && array[index + 2].startsWith(">") && array[index + 1].length == 0) {
+            return true;
+        } else if (array[index + 1] && array[index + 1].startsWith(">") && array[index].includes("Mme/m")) {
+            return true;
+        }
+        return "Nom non recuperer";
+    });
+
+    console.log(selectedPreviousElements);
+    lines.forEach(line => {
+        const titleMatch = line.match(fullNameWithTitleRegex);
+        
+        if (titleMatch) {
+            _fullNames.push(titleMatch[0].trim());
+        }
+
+        // Recherche des adresses
+        addressKeywords.forEach(keyword => {
+            if (line.toLowerCase().includes(keyword)) {
+                // Enlève caractères spéciaux
+                const address = cleanAddress(line.trim());
+                _addresses.push(address);
+            }
+        });
+    });
+
+    // Ajout des marqueurs pour chaque adresse trouvée
+    _addresses.forEach((address, index) => {
+        const col2 = _fullNames[index] || "N/A"; // Utilisation d'une valeur par défaut si aucune valeur n'est trouvée
+        getCoordinates(address)
+            .then(coords => {
+                addMarkerToMap(address, col2, coords);
+            })
+            .catch(error => {
+                console.error(`Erreur lors du géocodage de l'adresse ${address}:`, error);
+            });
+    });
+}
