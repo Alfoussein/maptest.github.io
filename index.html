@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet avec fonction Undo et OCR</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h3>Carte avec bouton "Undo", gestion des marqueurs, et OCR</h3>
+<input type="file" id="csvFileInput" accept=".csv" />
+<input type="file" id="imageFileInput" accept="image/*" />
+<div id="map" style="height: 500px;"></div>
+<button id="undoButton" disabled>Annuler la sélection</button>
+
+<div id="googleMapsUrls"></div>
+<div id="concatCol2Container"></div>
+<div id="extractedText"></div>
+
+<!-- Inclusion de Leaflet, PapaParse et Tesseract.js -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4"></script>
+<script src="script.js"></script>
+
+</body>
+</html>

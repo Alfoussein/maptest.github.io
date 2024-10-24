@@ -1,0 +1,13 @@
+#map {
+    height: 800px;
+    width: 100%;
+}
+
+.url-container, .concat-container {
+    margin-top: 10px;
+}
+
+.url-container a {
+    display: block;
+    margin: 5px 0;
+}
