@@ -1,10 +1,13 @@
+//var apiKey = 'de012302a8b6464691dbd1df48f474fe';
+//var apiKey = 'fc1af9eaec3c47c9b31d0dd09e0dc933';
+
 var map = L.map('map').setView([48.8566, 2.3522], 12); // Coordonnées pour centrer sur la France
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-//var apiKey = 'fc1af9eaec3c47c9b31d0dd09e0dc933';
+var apiKey = 'fc1af9eaec3c47c9b31d0dd09e0dc933';
 var selectedAddresses = [];
 var selectedCol2Values = [];
 var markers = [];
@@ -16,18 +19,6 @@ const ocrResult = `Mme/m MEDZA JACQUES
 Mme/m GRANEL JULIEN
 Mme/m ADRIEN FARRANDS
 Mme/m Elsa Rouiller`;
-
-setTimeout(() => {
-    const fullNameWithTitleRegex = /(Mme\/m|M|Mme)\s+([A-ZÀ-ÿ][a-zà-ÿ]+(?:\s+[A-ZÀ-ÿ][a-zà-ÿ]+)*)/g;
-    const names = ocrResult.match(fullNameWithTitleRegex);
-    
-    if (names) {
-        console.log('Noms extraits pour test :', names);
-    } else {
-        console.log('Aucun nom trouvé.');
-    }
-}, 2000); // Délai de 500 ms
-
 
 // Liste des mots-clés d'adresse
 const addressKeywords = [
@@ -242,6 +233,7 @@ function processRecognizedText(recognizedText) {
             _fullNames.push(titleMatch[0].trim());
         }
 
+        // Recherche des adresses
         addressKeywords.forEach(keyword => {
             if (line.toLowerCase().includes(keyword)) {
                 _addresses.push(line.trim());
@@ -249,8 +241,15 @@ function processRecognizedText(recognizedText) {
         });
     });
 
-    console.log('Noms complets détectés:', _fullNames);
-    console.log('Adresses détectées:', _addresses);
+    // Ajout des marqueurs pour chaque adresse trouvée
+    _addresses.forEach((address, index) => {
+        const col2 = _fullNames[index] || "N/A"; // Utilisation d'une valeur par défaut si aucune valeur n'est trouvée
+        getCoordinates(address)
+            .then(coords => {
+                addMarkerToMap(address, col2, coords);
+            })
+            .catch(error => {
+                console.error(`Erreur lors du géocodage de l'adresse ${address}:`, error);
+            });
+    });
 }
-
-
