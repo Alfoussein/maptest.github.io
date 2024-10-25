@@ -3,6 +3,10 @@ body, html {
     padding: 0;
     height: 100%;
     font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* Enable vertical scrolling */
+    overflow-x: hidden; /* Hide horizontal scrolling if it occurs */
 }
 
 #menuContainer {
@@ -73,7 +77,6 @@ input[type="file"]:focus {
     border-color: #2e7d32; /* Bordure verte plus foncée au focus */
 }
 
-
 #mapContainer {
     position: absolute;
     top: 0;
@@ -82,6 +85,7 @@ input[type="file"]:focus {
     height: 100%;
     z-index: 1;
     visibility: hidden; /* Cacher au départ */
+    overflow-y: auto; /* Enable scrolling */
 }
 
 #map {
@@ -100,15 +104,39 @@ input[type="file"]:focus {
     padding: 10px;
 }
 
-#restartButton{
+#restartButton {
     position: absolute;
     left: 70px;
     z-index: 1;
 }
 
-
-#validateListButton, #undoButton{
+#validateListButton, #undoButton {
     position: relative;
     bottom: 70px;
     z-index: 1;
+}
+
+/* Style du tableau pour le placer à droite */
+#addressTable {
+    width: 300px; /* Ajustez la largeur si nécessaire */
+    border-collapse: collapse;
+    position: fixed; /* Fixé à droite de l'écran */
+    top: 0;
+    right: 0;
+    height: 100%; /* Prend toute la hauteur de la fenêtre */
+    overflow-y: auto; /* Scroll si nécessaire */
+    background-color: white;
+    z-index: 5;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1); /* Légère ombre pour séparation */
+}
+
+#addressTable th, #addressTable td {
+    border: 1px solid #4CAF50;
+    padding: 10px;
+    text-align: left;
+}
+
+#addressTable th {
+    background-color: #4CAF50;
+    color: white;
 }
