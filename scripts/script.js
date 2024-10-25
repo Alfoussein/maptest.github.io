@@ -443,6 +443,13 @@ function displayanimation(){
                 duration: 3000,
                 // iterations: Infinity
             })
+
+        document.getElementById('validateListButton').animate(
+            [{ bottom: "0%" },{ bottom: '35%' } ],{
+                // sync options
+                duration: 3000,
+                // iterations: Infinity
+            })    
     }else{
         document.getElementById('addressTableContainer').animate(
             [{ top: "100%" },{ top: '0%' } ],{
