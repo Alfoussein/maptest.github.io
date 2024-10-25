@@ -32,7 +32,7 @@ const _fullNames = [];
 const _addresses = [];
 const _mapPoints = [];
 const _selectedMarkers = [];
-
+let countPeople = 1;
 function cleanAddress(address) {
     return address.replace(/[“”>]/g, '').trim(); // Supprime les “, ” et >
 }
@@ -216,29 +216,26 @@ function generateGoogleMapsUrl() {
 
     // Add a numbered cell
     var rowNumber = tableBody.children.length + 1; // Calculate the row number
-    
-    // Create the ordered list for the second column
-    var ol = document.createElement('ol');
+
+    // Create the list items directly
+    var liElements = '';
     selectedCol2Values.forEach(function(value) {
-        var li = document.createElement('li');
-        li.textContent = value + "\n";
-        ol.appendChild(li);
+        liElements += `<li>${countPeople} - ${value}</li>`;
+        countPeople++;
     });
 
     // Create table cells
-    var numberCell = `<td>${rowNumber}</td>`;
-    var olCell = document.createElement('td');
-    olCell.appendChild(ol); // Add the ordered list to the cell
+    var listCell = `<td>${liElements}</td>`; // Directly add list items
     var urlCell = `<td><a href="${fullUrl}" target="_blank">${fullUrl}</a></td>`;
 
-    // Construct the row with the first cell, ordered list cell, and URL cell
-    newRow.innerHTML = numberCell;
-    newRow.appendChild(olCell); // Append the second cell containing the ordered list
-    newRow.innerHTML += urlCell;
+    // Construct the row with the first cell, list items cell, and URL cell
+    newRow.innerHTML = listCell + urlCell;
 
     // Append the new row to the table body
     tableBody.appendChild(newRow);
+    
 }
+
 
 
 function generateCol2Div() {

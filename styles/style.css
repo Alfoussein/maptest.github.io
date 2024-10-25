@@ -1,3 +1,9 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body, html {
     margin: 0;
     padding: 0;
@@ -8,6 +14,7 @@ body, html {
     overflow-y: auto; /* Enable vertical scrolling */
     overflow-x: hidden; /* Hide horizontal scrolling if it occurs */
 }
+
 
 #menuContainer {
     position: absolute;
@@ -150,6 +157,10 @@ input[type="file"]:focus {
 
 }
 
+li{
+    list-style: none;
+    margin-bottom: 15px;
+}
 /* Styles pour mobiles */
 @media (max-width: 900px) {
    
@@ -200,5 +211,8 @@ input[type="file"]:focus {
 
     th, td {
         padding: 10px; /* Ajoute de l'espace dans les cellules */
+    }
+    td a {
+        font-size: small;
     }
 }
