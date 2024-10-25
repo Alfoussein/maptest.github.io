@@ -225,11 +225,12 @@ function generateGoogleMapsUrl() {
     });
 
     // Create table cells
+    var numberCell = `<td>${rowNumber}</td>`;
     var listCell = `<td>${liElements}</td>`; // Directly add list items
     var urlCell = `<td><a href="${fullUrl}" target="_blank">${fullUrl}</a></td>`;
 
     // Construct the row with the first cell, list items cell, and URL cell
-    newRow.innerHTML = listCell + urlCell;
+    newRow.innerHTML = numberCell + listCell + urlCell;
 
     // Append the new row to the table body
     tableBody.appendChild(newRow);
@@ -427,6 +428,14 @@ function mergeArray(selectedPreviousElements){
     console.log( linkedArray);
 }
 
+function displayanimation(){
+    document.getElementById('addressTableContainer').animate(
+        [{ top: "100%" },{ top: '65%' } ],{
+            // sync options
+            duration: 3000,
+            // iterations: Infinity
+        })
+}
 
 document.getElementById('tsfButton').addEventListener('click', function() {
     showFileInput('image');
@@ -449,6 +458,7 @@ function showFileInput(type) {
         document.getElementById('csvFileInput').style.display = 'block';
         document.getElementById('imageFileInput').style.display = 'none';
     }
+    ;
 }
 
 document.getElementById('csvFileInput').addEventListener('change', function(event) {
@@ -465,6 +475,8 @@ function showMapAndControls() {
     // Masquer les inputs
     document.getElementById('fileInputs').style.visibility = 'hidden';
     // Vous pouvez ajouter d'autres actions ici (ex: afficher des boutons de contrôle)
+    displayanimation()
+    //document.getElementById('addressTAbleContainer').style.zIndex = 10
 }
 
 // Votre code pour afficher la carte et gérer les événements...

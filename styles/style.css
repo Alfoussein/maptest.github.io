@@ -40,6 +40,21 @@ body, html {
     background-color: #4CAF50; /* Couleur de fond vert */
     cursor: pointer; /* Curseur de la souris */
     transition: background-color 0.3s, transform 0.2s; /* Transition */
+    animation-duration: 3s;
+    animation-name: slideinButton;
+}
+
+
+
+
+@keyframes slideinButton {
+    from {
+        opacity: 0%;
+    }
+
+    to {
+        top: 100%;
+    }
 }
 
 #tsfButton:hover, #otherButton:hover,
@@ -114,20 +129,21 @@ input[type="file"]:focus {
 #restartButton {
     position: absolute;
     left: 70px;
-    z-index: 1;
+    z-index: 1000;
 }
 
 #validateListButton, #undoButton {
     position: relative;
     bottom: 70px;
-    z-index: 1;
+    z-index: 400;
 }
 
 /* Style du tableau pour le placer à droite */
 #addressTable {
     width: 100%; /* Ajustez la largeur si nécessaire */
+    height: 100%;
  /* Légère ombre pour séparation */
- /* display: block;  */
+    display: block; 
 }
 
 #addressTable th, #addressTable td {
@@ -172,7 +188,7 @@ li{
     #map {
         position: absolute;
         width: 100%;
-        height: 100%; /* Réserve de la place pour les infos en bas */
+        height: 65%; /* Réserve de la place pour les infos en bas */
         z-index: 0;
     }
 
@@ -181,27 +197,44 @@ li{
     }
 
     #addressTableContainer {
-        position: relative; /* Fixe la position du tableau */
-        bottom: 0px; /* Positionne le tableau en bas de la page */
+        position: absolute;
+        top: 65%;
         left: 0; /* Aligne le tableau à gauche */
         right: 0; /* Aligne le tableau à droite */
         background-color: rgb(244, 244, 244); /* Arrière-plan blanc */
-        z-index: 10; /* Assure que le tableau est au-dessus des autres éléments */
+        z-index: 0; /* Assure que le tableau est au-dessus des autres éléments */
         border-top: 1px solid #ccc; /* Bordure supérieure */
         width: 100%;
-        height: 35%;
+        height: 100%;
         display: block;
+        
+         /* animation-duration: 3s;
+        animation-name: slidein; */
     }
+
+
     #addressTable {
         width: 100%; /* Ajustez la largeur si nécessaire */
      /* Légère ombre pour séparation */
-     /* display: block;  */
+     display: block; 
+    }
+
+    #restartButton {
+        position: absolute;
+        left: 70px;
+        z-index: 1;
+        width: 200px;
+        left: 23%;
+        font-size: medium;
     }
 
     #validateListButton{
         position: absolute;
-        bottom: 0;
+        bottom: 35%;
         z-index: 5;
+        width: 200px;
+        left: 23%;
+        font-size: medium;
     }
 
     table {

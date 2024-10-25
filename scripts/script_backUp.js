@@ -7,7 +7,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-var apiKey = 'fc1af9eaec3c47c9b31d0dd09e0dc933';
+var apiKey = 'de012302a8b6464691dbd1df48f474fe';
 var selectedAddresses = [];
 var selectedCol2Values = [];
 var markers = [];
@@ -32,7 +32,7 @@ const _fullNames = [];
 const _addresses = [];
 const _mapPoints = [];
 const _selectedMarkers = [];
-
+let countPeople = 1;
 function cleanAddress(address) {
     return address.replace(/[“”>]/g, '').trim(); // Supprime les “, ” et >
 }
@@ -68,14 +68,23 @@ function addMarkerToMap(info, col2, coordinates) {
             return; // Ne rien faire si le marqueur est déjà sélectionné
         }
 
+        let index = linkedArray.findIndex(data => data.address === info);
+
         if(boolOCR){
-            let index = linkedArray.findIndex(data => data.address === info);
             sortDeliveryArray.push(linkedArray[index]);
             linkedArray.splice(index, 1);
             console.log(sortDeliveryArray)
             console.log(linkedArray)
+            selectedAddresses.push(info);
+            selectedCol2Values.push(sortDeliveryArray[sortDeliveryArray.length-1].name);
+            markers.push(marker);
+        }else{
+            selectedAddresses.push(info);
+            selectedCol2Values.push(col2);
+            markers.push(marker);
         }
         // Marquer le marqueur comme sélectionné
+        marker.isSelected = true;
 
         // Changer l'icône du marqueur
         marker.setIcon(L.icon({
@@ -86,9 +95,7 @@ function addMarkerToMap(info, col2, coordinates) {
         }));
 
         
-        selectedAddresses.push(info);
-        selectedCol2Values.push(col2);
-        markers.push(marker);
+        
 
         document.querySelector('#undoButton').disabled = false;
 
@@ -102,7 +109,7 @@ function addMarkerToMap(info, col2, coordinates) {
                 markers = []; // Réinitialise la liste des marqueurs
                 
                 generateGoogleMapsUrl();
-                generateCol2Div();
+                //generateCol2Div();
                 selectedAddressesStorage.push([...selectedAddresses]);
                 selectedAddresses = []; // Réinitialise les adresses sélectionnées
                 selectedCol2Values = [];
@@ -126,7 +133,7 @@ function addMarkerToMap(info, col2, coordinates) {
             // Vérifie si le nombre total d'adresses sélectionnées est un multiple de 9 et génère l'URL
             if (confirm(`Vous avez sélectionné ${selectedAddresses.length} adresses. Voulez-vous générer l'URL ?`)) {
                 generateGoogleMapsUrl();
-                generateCol2Div();
+                //generateCol2Div();
                 selectedAddressesStorage.push([...selectedAddresses]);
                 selectedAddresses = []; // Réinitialise les adresses sélectionnées
                 selectedCol2Values = [];
@@ -185,22 +192,15 @@ function undoSelection() {
                 });
         });
 
-        // Suppression du dernier div d'URL générée (si présent)
-        var googleMapsUrlsDiv = document.querySelector('#googleMapsUrls');
-        if (googleMapsUrlsDiv.lastChild) {
-            googleMapsUrlsDiv.removeChild(googleMapsUrlsDiv.lastChild);
-        }
+        var tableBody = document.querySelector('#addressTable tbody');
+    if (tableBody.lastChild) {
+        tableBody.removeChild(tableBody.lastChild);
+    }
 
-        // Suppression du dernier div de valeurs concaténées de la colonne 2 (si présent)
-        var concatCol2Div = document.querySelector('#concatCol2Container');
-        if (concatCol2Div.lastChild) {
-            concatCol2Div.removeChild(concatCol2Div.lastChild);
-        }
-
-        // Gestion de l'activation/désactivation du bouton undo
-        if (selectedAddressesStorage.length === 0) {
-            document.querySelector('#undoButton').disabled = true;
-        }
+    // Gestion de l'activation/désactivation du bouton undo
+    if (tableBody.children.length === 0) {
+        document.querySelector('#undoButton').disabled = true;
+    }
     }
 }
 
@@ -210,18 +210,68 @@ function generateGoogleMapsUrl() {
     var concatenatedAddresses = selectedAddresses.join('/');
     var fullUrl = urlBase + concatenatedAddresses;
 
-    var urlDiv = document.createElement('div');
-    urlDiv.className = 'url-container';
-    urlDiv.innerHTML = `<a href="${fullUrl}" target="_blank">${fullUrl}</a>`;
-    document.querySelector('#googleMapsUrls').appendChild(urlDiv);
+    // Create a new row for the table
+    var tableBody = document.querySelector('#addressTable tbody');
+    var newRow = document.createElement('tr');
+
+    // Add a numbered cell
+    var rowNumber = tableBody.children.length + 1; // Calculate the row number
+
+    // Create the list items directly
+    var liElements = '';
+    selectedCol2Values.forEach(function(value) {
+        liElements += `<li>${countPeople} - ${value}</li>`;
+        countPeople++;
+    });
+
+    // Create table cells
+    var numberCell = `<td>${rowNumber}</td>`;
+    var listCell = `<td>${liElements}</td>`; // Directly add list items
+    var urlCell = `<td><a href="${fullUrl}" target="_blank">${fullUrl}</a></td>`;
+
+    // Construct the row with the first cell, list items cell, and URL cell
+    newRow.innerHTML = numberCell + listCell + urlCell;
+
+    // Append the new row to the table body
+    tableBody.appendChild(newRow);
+    
 }
+
+
 
 function generateCol2Div() {
     var col2Div = document.createElement('div');
     col2Div.className = 'concat-container';
-    col2Div.innerHTML = `<b>Colonnes 2:</b> ${selectedCol2Values.join(', ')}`;
+
+    // Crée un tableau pour afficher les colonnes
+    var table = document.createElement('table');
+    var headerRow = table.insertRow();
+
+    // Crée les en-têtes du tableau
+    var header1 = headerRow.insertCell(0);
+    var header2 = headerRow.insertCell(1);
+    header1.textContent = 'Demandes'; // Titre de la première colonne
+    header2.textContent = 'URLs'; // Titre de la seconde colonne
+
+    // Remplis le tableau avec les données
+    selectedCol2Values.forEach((value, index) => {
+        var row = table.insertRow();
+        var demandCell = row.insertCell(0);
+        var urlCell = row.insertCell(1);
+        demandCell.textContent = value; // Adresse de la colonne 2
+        urlCell.innerHTML = `<a href="${generateGoogleMapsUrl(value)}" target="_blank">${generateGoogleMapsUrl(value)}</a>`; // URL correspondante
+    });
+
+    // Ajoute le tableau au conteneur
+    col2Div.appendChild(table);
     document.querySelector('#concatCol2Container').appendChild(col2Div);
 }
+
+// Assurez-vous que le conteneur pour le tableau est défini dans votre HTML
+// <div id="googleMapsUrls"></div>
+// <div id="concatCol2Container"></div>
+// <table id="urlTable"></table>
+
 
 document.querySelector('#undoButton').addEventListener('click', undoSelection);
 
@@ -300,7 +350,7 @@ document.querySelector('#validateListButton').addEventListener('click', function
 
     // Générer l'URL et les éléments associés
     generateGoogleMapsUrl();
-    generateCol2Div();
+    // generateCol2Div();
     
     // Ajouter les adresses sélectionnées à la mémoire pour la restauration si nécessaire
     selectedAddressesStorage.push([...selectedAddresses]);
@@ -320,6 +370,8 @@ async function processRecognizedText(recognizedText) {
     boolOCR = true
     const lines = recognizedText.split('\n');
     console.log(lines);
+
+    //Sort name by first methode
     const selectedPreviousElements = await lines.filter((line, index, array) => {
         if ( array[index + 2] && array[index + 2].startsWith(">") && array[index + 1].length == 0) {
             return true;
@@ -332,6 +384,8 @@ async function processRecognizedText(recognizedText) {
     });
 
     console.log(selectedPreviousElements);
+
+    //Sort name by second methode
     await lines.forEach(line => {
         const titleMatch = line.match(fullNameWithTitleRegex);
         
@@ -354,7 +408,7 @@ async function processRecognizedText(recognizedText) {
     console.log(_addresses)
     // Ajout des marqueurs pour chaque adresse trouvée
     await _addresses.forEach((address, index) => {
-        const col2 = _fullNames[index] || "N/A"; // Utilisation d'une valeur par défaut si aucune valeur n'est trouvée
+        const col2 = _fullNames[index] || selectedPreviousElements[index]; // Utilisation d'une valeur par défaut si aucune valeur n'est trouvée
         getCoordinates(address)
             .then(coords => {
                 addMarkerToMap(address, col2, coords);
@@ -374,6 +428,14 @@ function mergeArray(selectedPreviousElements){
     console.log( linkedArray);
 }
 
+function displayanimation(){
+    document.getElementById('addressTableContainer').animate(
+        [{ top: "100%" },{ top: '65%' } ],{
+            // sync options
+            duration: 3000,
+            // iterations: Infinity
+        })
+}
 
 document.getElementById('tsfButton').addEventListener('click', function() {
     showFileInput('image');
@@ -396,6 +458,7 @@ function showFileInput(type) {
         document.getElementById('csvFileInput').style.display = 'block';
         document.getElementById('imageFileInput').style.display = 'none';
     }
+    ;
 }
 
 document.getElementById('csvFileInput').addEventListener('change', function(event) {
@@ -412,6 +475,8 @@ function showMapAndControls() {
     // Masquer les inputs
     document.getElementById('fileInputs').style.visibility = 'hidden';
     // Vous pouvez ajouter d'autres actions ici (ex: afficher des boutons de contrôle)
+    displayanimation()
+    //document.getElementById('addressTAbleContainer').style.zIndex = 10
 }
 
 // Votre code pour afficher la carte et gérer les événements...
