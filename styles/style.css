@@ -89,7 +89,7 @@ input[type="file"]:focus {
 }
 
 #map {
-    width: 100%;
+    width: 70%;
     height: calc(100vh - 100px); /* Réserve de la place pour les infos en bas */
     z-index: 0;
 }
@@ -118,16 +118,9 @@ input[type="file"]:focus {
 
 /* Style du tableau pour le placer à droite */
 #addressTable {
-    width: 300px; /* Ajustez la largeur si nécessaire */
-    border-collapse: collapse;
-    position: fixed; /* Fixé à droite de l'écran */
-    top: 0;
-    right: 0;
-    height: 100%; /* Prend toute la hauteur de la fenêtre */
-    overflow-y: auto; /* Scroll si nécessaire */
-    background-color: white;
-    z-index: 5;
-    box-shadow: -2px 0 5px rgba(0,0,0,0.1); /* Légère ombre pour séparation */
+    width: 100%; /* Ajustez la largeur si nécessaire */
+ /* Légère ombre pour séparation */
+ /* display: block;  */
 }
 
 #addressTable th, #addressTable td {
@@ -139,4 +132,67 @@ input[type="file"]:focus {
 #addressTable th {
     background-color: #4CAF50;
     color: white;
+}
+
+
+/* Styles par défaut pour le tableau */
+#addressTableContainer {
+    width: 30%;
+    border-collapse: collapse;
+    position: absolute; /* Fixé à droite de l'écran */
+    top: 0px;
+    right: 0;
+    height: 100%; /* Prend toute la hauteur de la fenêtre */
+    overflow-y: auto; /* Scroll si nécessaire */
+    background-color: white;
+    z-index: 5;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+
+}
+
+/* Styles pour mobiles */
+@media (max-width: 900px) {
+   
+    #mapContainer{
+        position: relative;
+        overflow: hidden;
+    }
+
+    #map {
+        position: absolute;
+        width: 100%;
+        height: 100%; /* Réserve de la place pour les infos en bas */
+        z-index: 0;
+    }
+
+    #undoButton{
+        display: none;
+    }
+
+    #addressTableContainer {
+        position: relative; /* Fixe la position du tableau */
+        bottom: 0px; /* Positionne le tableau en bas de la page */
+        left: 0; /* Aligne le tableau à gauche */
+        right: 0; /* Aligne le tableau à droite */
+        background-color: rgb(244, 244, 244); /* Arrière-plan blanc */
+        z-index: 10; /* Assure que le tableau est au-dessus des autres éléments */
+        border-top: 1px solid #ccc; /* Bordure supérieure */
+        width: 100%;
+        height: 35%;
+        display: block;
+    }
+    #addressTable {
+        width: 100%; /* Ajustez la largeur si nécessaire */
+     /* Légère ombre pour séparation */
+     /* display: block;  */
+    }
+
+    table {
+        width: 100%; /* Le tableau prend toute la largeur disponible */
+        border-collapse: collapse; /* Évite les espaces entre les cellules */
+    }
+
+    th, td {
+        padding: 10px; /* Ajoute de l'espace dans les cellules */
+    }
 }

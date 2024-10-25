@@ -7,7 +7,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-var apiKey = 'fc1af9eaec3c47c9b31d0dd09e0dc933';
+//var apiKey = 'de012302a8b6464691dbd1df48f474fe';
 var selectedAddresses = [];
 var selectedCol2Values = [];
 var markers = [];
@@ -75,6 +75,13 @@ function addMarkerToMap(info, col2, coordinates) {
             linkedArray.splice(index, 1);
             console.log(sortDeliveryArray)
             console.log(linkedArray)
+            selectedAddresses.push(info);
+            selectedCol2Values.push(sortDeliveryArray[sortDeliveryArray.length-1].name);
+            markers.push(marker);
+        }else{
+            selectedAddresses.push(info);
+            selectedCol2Values.push(col2);
+            markers.push(marker);
         }
         // Marquer le marqueur comme sélectionné
         marker.isSelected = true;
@@ -88,9 +95,7 @@ function addMarkerToMap(info, col2, coordinates) {
         }));
 
         
-        selectedAddresses.push(info);
-        selectedCol2Values.push(sortDeliveryArray[sortDeliveryArray.length-1].name);
-        markers.push(marker);
+        
 
         document.querySelector('#undoButton').disabled = false;
 
@@ -187,22 +192,15 @@ function undoSelection() {
                 });
         });
 
-        // Suppression du dernier div d'URL générée (si présent)
-        var googleMapsUrlsDiv = document.querySelector('#googleMapsUrls');
-        if (googleMapsUrlsDiv.lastChild) {
-            googleMapsUrlsDiv.removeChild(googleMapsUrlsDiv.lastChild);
-        }
+        var tableBody = document.querySelector('#addressTable tbody');
+    if (tableBody.lastChild) {
+        tableBody.removeChild(tableBody.lastChild);
+    }
 
-        // Suppression du dernier div de valeurs concaténées de la colonne 2 (si présent)
-        var concatCol2Div = document.querySelector('#concatCol2Container');
-        if (concatCol2Div.lastChild) {
-            concatCol2Div.removeChild(concatCol2Div.lastChild);
-        }
-
-        // Gestion de l'activation/désactivation du bouton undo
-        if (selectedAddressesStorage.length === 0) {
-            document.querySelector('#undoButton').disabled = true;
-        }
+    // Gestion de l'activation/désactivation du bouton undo
+    if (tableBody.children.length === 0) {
+        document.querySelector('#undoButton').disabled = true;
+    }
     }
 }
 
