@@ -7,7 +7,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-//var apiKey = 'de012302a8b6464691dbd1df48f474fe';
+var apiKey = 'de012302a8b6464691dbd1df48f474fe';
 var selectedAddresses = [];
 var selectedCol2Values = [];
 var markers = [];
