@@ -1,0 +1,114 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+}
+
+#menuContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #b0c4de; /* Gris métallisé */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+
+#tsfButton, #otherButton,
+#restartButton, #undoButton, #validateListButton {
+    font-size: 1.5em;
+    padding: 15px 30px;
+    margin: 10px;
+    border: none;
+    border-radius: 5px; /* Coins arrondis */
+    color: white; /* Couleur du texte */
+    background-color: #4CAF50; /* Couleur de fond vert */
+    cursor: pointer; /* Curseur de la souris */
+    transition: background-color 0.3s, transform 0.2s; /* Transition */
+}
+
+#tsfButton:hover, #otherButton:hover,
+#restartButton:hover, #undoButton:hover, #validateListButton:hover {
+    background-color: #45a049; /* Couleur plus foncée au survol */
+    transform: scale(1.05); /* Agrandir légèrement au survol */
+}
+
+#fileInputs {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(176, 196, 222, 0.9); /* Gris transparent */
+    z-index: 5; /* Moins que le menu pour que les boutons soient dessus */
+    visibility: hidden; /* Cacher au départ */
+}
+
+input[type="file"] {
+    margin: 10px;
+    padding: 10px;
+    font-size: 1em; /* Taille de la police */
+    border: 2px solid #4CAF50; /* Bordure verte */
+    border-radius: 5px; /* Coins arrondis */
+    background-color: white; /* Fond blanc */
+    color: #333; /* Couleur du texte */
+    cursor: pointer; /* Curseur de la souris */
+    transition: border-color 0.3s; /* Transition */
+}
+
+input[type="file"]:hover {
+    border-color: #45a049; /* Changer la bordure au survol */
+}
+
+input[type="file"]:focus {
+    outline: none; /* Retirer le contour par défaut */
+    border-color: #2e7d32; /* Bordure verte plus foncée au focus */
+}
+
+
+#mapContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    visibility: hidden; /* Cacher au départ */
+}
+
+#map {
+    width: 100%;
+    height: calc(100vh - 100px); /* Réserve de la place pour les infos en bas */
+    z-index: 0;
+}
+
+#googleMapsUrls, #concatCol2Container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 5;
+    background-color: rgba(255, 255, 255, 0.8); /* Blanc transparent */
+    padding: 10px;
+}
+
+#restartButton{
+    position: absolute;
+    left: 70px;
+    z-index: 1;
+}
+
+
+#validateListButton, #undoButton{
+    position: relative;
+    bottom: 70px;
+    z-index: 1;
+}

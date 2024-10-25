@@ -12,9 +12,10 @@ var selectedAddresses = [];
 var selectedCol2Values = [];
 var markers = [];
 var selectedAddressesStorage = [];
-
+var sortDeliveryArray = [];
+let linkedArray = [];
 const fullNameWithTitleRegex = /(Mme\/m|M|Mme)\s+([A-ZÀ-ÿ][a-zà-ÿ]+(?:\s+[A-ZÀ-ÿ][a-zà-ÿ]+)*)/g;
-
+let boolOCR = false
 const ocrResult = `Mme/m MEDZA JACQUES
 Mme/m GRANEL JULIEN
 Mme/m ADRIEN FARRANDS
@@ -23,7 +24,7 @@ Mme/m Elsa Rouiller`;
 // Liste des mots-clés d'adresse
 const addressKeywords = [
     'rue', 'avenue', 'boulevard', 'place', 'chemin', 'route',
-    'square', 'impasse', 'allée', 'esplanade'
+    'square', 'impasse', 'allée', 'esplanade', 'passage'
 ];
 
 // Listes pour stocker les noms complets et les adresses
@@ -67,8 +68,14 @@ function addMarkerToMap(info, col2, coordinates) {
             return; // Ne rien faire si le marqueur est déjà sélectionné
         }
 
+        if(boolOCR){
+            let index = linkedArray.findIndex(data => data.address === info);
+            sortDeliveryArray.push(linkedArray[index]);
+            linkedArray.splice(index, 1);
+            console.log(sortDeliveryArray)
+            console.log(linkedArray)
+        }
         // Marquer le marqueur comme sélectionné
-        marker.isSelected = true;
 
         // Changer l'icône du marqueur
         marker.setIcon(L.icon({
@@ -78,6 +85,7 @@ function addMarkerToMap(info, col2, coordinates) {
             popupAnchor: [1, -34],
         }));
 
+        
         selectedAddresses.push(info);
         selectedCol2Values.push(col2);
         markers.push(marker);
@@ -308,20 +316,23 @@ document.querySelector('#validateListButton').addEventListener('click', function
 
 
 // Fonction pour traiter le texte reconnu
-function processRecognizedText(recognizedText) {
+async function processRecognizedText(recognizedText) {
+    boolOCR = true
     const lines = recognizedText.split('\n');
     console.log(lines);
-    const selectedPreviousElements = lines.filter((line, index, array) => {
-        if (array[index + 2] && array[index + 2].startsWith(">") && array[index + 1].length == 0) {
+    const selectedPreviousElements = await lines.filter((line, index, array) => {
+        if ( array[index + 2] && array[index + 2].startsWith(">") && array[index + 1].length == 0) {
             return true;
         } else if (array[index + 1] && array[index + 1].startsWith(">") && array[index].includes("Mme/m")) {
+            return true;
+        } else if (array[index + 2] && array[index + 2].startsWith(">") && !array[index-1].includes("Mme/m") && array[index].includes("Mme/m")) {
             return true;
         }
         return false;
     });
 
     console.log(selectedPreviousElements);
-    lines.forEach(line => {
+    await lines.forEach(line => {
         const titleMatch = line.match(fullNameWithTitleRegex);
         
         if (titleMatch) {
@@ -340,9 +351,9 @@ function processRecognizedText(recognizedText) {
 
     
     
-
+    console.log(_addresses)
     // Ajout des marqueurs pour chaque adresse trouvée
-    _addresses.forEach((address, index) => {
+    await _addresses.forEach((address, index) => {
         const col2 = _fullNames[index] || "N/A"; // Utilisation d'une valeur par défaut si aucune valeur n'est trouvée
         getCoordinates(address)
             .then(coords => {
@@ -352,4 +363,55 @@ function processRecognizedText(recognizedText) {
                 console.error(`Erreur lors du géocodage de l'adresse ${address}:`, error);
             });
     });
+    await mergeArray(selectedPreviousElements);
 }
+
+function mergeArray(selectedPreviousElements){
+    for (let i = 0; i < _addresses.length; i++) {
+        linkedArray.push({ address: _addresses[i], name: selectedPreviousElements[i] });
+    }
+    
+    console.log( linkedArray);
+}
+
+
+document.getElementById('tsfButton').addEventListener('click', function() {
+    showFileInput('image');
+});
+
+document.getElementById('otherButton').addEventListener('click', function() {
+    showFileInput('csv');
+});
+
+function showFileInput(type) {
+    // Masquer le menu
+    document.getElementById('menuContainer').style.visibility = 'hidden';
+    // Afficher les inputs
+    document.getElementById('fileInputs').style.visibility = 'visible';
+    // Afficher l'input correspondant
+    if (type === 'image') {
+        document.getElementById('imageFileInput').style.display = 'block';
+        document.getElementById('csvFileInput').style.display = 'none';
+    } else {
+        document.getElementById('csvFileInput').style.display = 'block';
+        document.getElementById('imageFileInput').style.display = 'none';
+    }
+}
+
+document.getElementById('csvFileInput').addEventListener('change', function(event) {
+    showMapAndControls();
+});
+
+document.getElementById('imageFileInput').addEventListener('change', function(event) {
+    showMapAndControls();
+});
+
+function showMapAndControls() {
+    // Afficher la carte
+    document.getElementById('mapContainer').style.visibility = 'visible';
+    // Masquer les inputs
+    document.getElementById('fileInputs').style.visibility = 'hidden';
+    // Vous pouvez ajouter d'autres actions ici (ex: afficher des boutons de contrôle)
+}
+
+// Votre code pour afficher la carte et gérer les événements...

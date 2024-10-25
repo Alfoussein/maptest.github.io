@@ -12,9 +12,10 @@ var selectedAddresses = [];
 var selectedCol2Values = [];
 var markers = [];
 var selectedAddressesStorage = [];
-
+var sortDeliveryArray = [];
+let linkedArray = [];
 const fullNameWithTitleRegex = /(Mme\/m|M|Mme)\s+([A-ZÀ-ÿ][a-zà-ÿ]+(?:\s+[A-ZÀ-ÿ][a-zà-ÿ]+)*)/g;
-
+let boolOCR = false
 const ocrResult = `Mme/m MEDZA JACQUES
 Mme/m GRANEL JULIEN
 Mme/m ADRIEN FARRANDS
@@ -23,7 +24,7 @@ Mme/m Elsa Rouiller`;
 // Liste des mots-clés d'adresse
 const addressKeywords = [
     'rue', 'avenue', 'boulevard', 'place', 'chemin', 'route',
-    'square', 'impasse', 'allée', 'esplanade'
+    'square', 'impasse', 'allée', 'esplanade', 'passage'
 ];
 
 // Listes pour stocker les noms complets et les adresses
@@ -48,16 +49,35 @@ function getCoordinates(address) {
 }
 
 function addMarkerToMap(info, col2, coordinates) {
-    
     if (selectedAddresses.length >= 9) {
         alert("Vous avez déjà sélectionné 9 adresses. Veuillez annuler une sélection avant d'en ajouter d'autres.");
         return;
     }
 
+    // Création du marqueur et ajout à la carte
     var marker = L.marker([coordinates.lat, coordinates.lng]).addTo(map);
     marker.bindPopup(`<b>${info}</b>`).openPopup();
 
+    // Propriété pour suivre si le marqueur a déjà été sélectionné
+    marker.isSelected = false;
+
     marker.on('click', function() {
+        // Vérifie si le marqueur a déjà été sélectionné
+        if (marker.isSelected) {
+            alert("Ce marqueur a déjà été sélectionné.");
+            return; // Ne rien faire si le marqueur est déjà sélectionné
+        }
+
+        if(boolOCR){
+            let index = linkedArray.findIndex(data => data.address === info);
+            sortDeliveryArray.push(linkedArray[index]);
+            linkedArray.splice(index, 1);
+            console.log(sortDeliveryArray)
+            console.log(linkedArray)
+        }
+        // Marquer le marqueur comme sélectionné
+
+        // Changer l'icône du marqueur
         marker.setIcon(L.icon({
             iconUrl: 'https://cdn-icons-png.flaticon.com/512/64/64572.png',
             iconSize: [25, 41],
@@ -65,17 +85,16 @@ function addMarkerToMap(info, col2, coordinates) {
             popupAnchor: [1, -34],
         }));
 
+        
         selectedAddresses.push(info);
         selectedCol2Values.push(col2);
         markers.push(marker);
 
         document.querySelector('#undoButton').disabled = false;
 
-        
-
+        // Vérifie si vous avez atteint 9 sélections
         if (selectedAddresses.length === 9) {
             if (confirm("Vous avez sélectionné 9 adresses. Voulez-vous continuer ?")) {
-                console.log("popopopopopop")
                 // Supprime les marqueurs de la carte après confirmation
                 markers.forEach(marker => {
                     map.removeLayer(marker);
@@ -96,16 +115,28 @@ function addMarkerToMap(info, col2, coordinates) {
                         iconAnchor: [12, 41],
                         popupAnchor: [1, -34],
                     }));
+                    marker.isSelected = false; // Réinitialiser la sélection
                 });
 
                 // Réinitialiser la liste des adresses sélectionnées pour permettre une nouvelle sélection
                 selectedAddresses = [];
                 selectedCol2Values = [];
             }
+        } else if (selectedAddresses.length % 9 === 0 && selectedAddresses.length > 0) {
+            // Vérifie si le nombre total d'adresses sélectionnées est un multiple de 9 et génère l'URL
+            if (confirm(`Vous avez sélectionné ${selectedAddresses.length} adresses. Voulez-vous générer l'URL ?`)) {
+                generateGoogleMapsUrl();
+                generateCol2Div();
+                selectedAddressesStorage.push([...selectedAddresses]);
+                selectedAddresses = []; // Réinitialise les adresses sélectionnées
+                selectedCol2Values = [];
+            }
         }
     });
+
 }
 
+// Votre fonction d'annulation
 function undoSelection() {
     if (selectedAddressesStorage.length > 0) {
         var lastGroup = selectedAddressesStorage.pop(); // Prend le dernier tableau d'adresses
@@ -128,7 +159,20 @@ function undoSelection() {
                             popupAnchor: [1, -34],
                         }));
 
+                        // Réinitialisation de la propriété isSelected
+                        marker.isSelected = false; 
+
                         marker.on('click', function() {
+                            // Vérifie si le marqueur a déjà été sélectionné
+                            if (marker.isSelected) {
+                                alert("Ce marqueur a déjà été sélectionné.");
+                                return; // Ne rien faire si le marqueur est déjà sélectionné
+                            }
+
+                            // Marquer le marqueur comme sélectionné
+                            marker.isSelected = true;
+
+                            // Changer l'icône du marqueur
                             marker.setIcon(L.icon({
                                 iconUrl: 'https://cdn-icons-png.flaticon.com/512/64/64572.png',
                                 iconSize: [25, 21],
@@ -159,6 +203,7 @@ function undoSelection() {
         }
     }
 }
+
 
 function generateGoogleMapsUrl() {
     var urlBase = "https://www.google.fr/maps/dir/";
@@ -215,7 +260,6 @@ document.querySelector('#csvFileInput').addEventListener('change', function(even
 // Gestion de l'extraction de texte à partir d'images avec Tesseract.js
 document.querySelector('#imageFileInput').addEventListener('change', function(event) {
     const files = event.target.files; // Récupère tous les fichiers sélectionnés
-<<<<<<< HEAD
     let combinedText = ''; // Accumulateur pour le texte extrait
 
     if (files.length > 0) {
@@ -226,25 +270,10 @@ document.querySelector('#imageFileInput').addEventListener('change', function(ev
             ).then(({ data: { text } }) => {
                 console.log(text); // Affiche le texte extrait dans la console
                 combinedText += text + '\n'; // Ajoute le texte extrait à l'accumulateur
-=======
-    if (files.length > 0) {
-        Array.from(files).forEach(file => {
-            Tesseract.recognize(
-                file,
-                'eng', // Définir la langue pour l'OCR
-                {
-                    logger: m => console.log(m) // Optionnel : affiche la progression
-                }
-            ).then(({ data: { text } }) => {
-                console.log(text); // Affiche le texte extrait dans la console
-                document.querySelector('#extractedText').innerText += text + '\n'; // Affiche le texte extrait dans l'élément de la page
-                processRecognizedText(text); // Appel à la fonction pour traiter le texte reconnu
->>>>>>> df02d11233486422eb04c36cb0ebfde0cd489de1
             }).catch(err => {
                 console.error('Erreur lors de l\'extraction du texte:', err);
             });
         });
-<<<<<<< HEAD
 
         // Une fois que toutes les promesses sont résolues, traiter le texte combiné
         Promise.all(promises).then(() => {
@@ -253,58 +282,78 @@ document.querySelector('#imageFileInput').addEventListener('change', function(ev
     }
 });
 
-// Fonction pour traiter le texte reconnu
-function processRecognizedText(recognizedText) {
-    const lines = recognizedText.split('\n');
-    console.log(lines);
-    const selectedPreviousElements = lines.filter((line, index, array) => {
-        if (array[index + 2] && array[index + 2].startsWith(">") && array[index + 1].length == 0) {
-            return true;
-        } else if (array[index + 1] && array[index + 1].startsWith(">") && array[index].includes("Mme/m")) {
-            return true;
-        }
-        return "Nom non recuperer";
-    });
+// Ajout de l'événement pour le bouton de redémarrage
+document.querySelector('#restartButton').addEventListener('click', restartApplication);
 
-    console.log(selectedPreviousElements);
-    lines.forEach(line => {
-        const titleMatch = line.match(fullNameWithTitleRegex);
-        
-        if (titleMatch) {
-=======
+function restartApplication() {
+    // reload the current page
+window.location.reload();
+
+}
+
+document.querySelector('#validateListButton').addEventListener('click', function() {
+    // Vérifiez si des adresses sont sélectionnées
+    if (selectedAddresses.length === 0) {
+        alert("Aucune adresse sélectionnée pour valider.");
+        return;
     }
+
+    // Générer l'URL et les éléments associés
+    generateGoogleMapsUrl();
+    generateCol2Div();
+    
+    // Ajouter les adresses sélectionnées à la mémoire pour la restauration si nécessaire
+    selectedAddressesStorage.push([...selectedAddresses]);
+    
+    // Réinitialiser les listes
+    selectedAddresses = [];
+    selectedCol2Values = [];
+    markers.forEach(marker => {
+        map.removeLayer(marker); // Supprime les marqueurs de la carte
+    });
+    markers = []; // Réinitialise la liste des marqueurs
 });
 
 
 // Fonction pour traiter le texte reconnu
-function processRecognizedText(recognizedText) {
-    console.log("called process");
+async function processRecognizedText(recognizedText) {
+    boolOCR = true
     const lines = recognizedText.split('\n');
-    lines.forEach(line => {
+    console.log(lines);
+    const selectedPreviousElements = await lines.filter((line, index, array) => {
+        if ( array[index + 2] && array[index + 2].startsWith(">") && array[index + 1].length == 0) {
+            return true;
+        } else if (array[index + 1] && array[index + 1].startsWith(">") && array[index].includes("Mme/m")) {
+            return true;
+        } else if (array[index + 2] && array[index + 2].startsWith(">") && !array[index-1].includes("Mme/m") && array[index].includes("Mme/m")) {
+            return true;
+        }
+        return false;
+    });
+
+    console.log(selectedPreviousElements);
+    await lines.forEach(line => {
         const titleMatch = line.match(fullNameWithTitleRegex);
+        
         if (titleMatch) {
-            console.log("called process");
->>>>>>> df02d11233486422eb04c36cb0ebfde0cd489de1
             _fullNames.push(titleMatch[0].trim());
         }
 
         // Recherche des adresses
         addressKeywords.forEach(keyword => {
             if (line.toLowerCase().includes(keyword)) {
-<<<<<<< HEAD
                 // Enlève caractères spéciaux
                 const address = cleanAddress(line.trim());
-=======
-                const address = cleanAddress(line.trim()); 
-                console.log(keyword);
->>>>>>> df02d11233486422eb04c36cb0ebfde0cd489de1
                 _addresses.push(address);
             }
         });
     });
 
+    
+    
+    console.log(_addresses)
     // Ajout des marqueurs pour chaque adresse trouvée
-    _addresses.forEach((address, index) => {
+    await _addresses.forEach((address, index) => {
         const col2 = _fullNames[index] || "N/A"; // Utilisation d'une valeur par défaut si aucune valeur n'est trouvée
         getCoordinates(address)
             .then(coords => {
@@ -314,8 +363,55 @@ function processRecognizedText(recognizedText) {
                 console.error(`Erreur lors du géocodage de l'adresse ${address}:`, error);
             });
     });
-<<<<<<< HEAD
+    await mergeArray(selectedPreviousElements);
 }
-=======
+
+function mergeArray(selectedPreviousElements){
+    for (let i = 0; i < _addresses.length; i++) {
+        linkedArray.push({ address: _addresses[i], name: selectedPreviousElements[i] });
+    }
+    
+    console.log( linkedArray);
 }
->>>>>>> df02d11233486422eb04c36cb0ebfde0cd489de1
+
+
+document.getElementById('tsfButton').addEventListener('click', function() {
+    showFileInput('image');
+});
+
+document.getElementById('otherButton').addEventListener('click', function() {
+    showFileInput('csv');
+});
+
+function showFileInput(type) {
+    // Masquer le menu
+    document.getElementById('menuContainer').style.visibility = 'hidden';
+    // Afficher les inputs
+    document.getElementById('fileInputs').style.visibility = 'visible';
+    // Afficher l'input correspondant
+    if (type === 'image') {
+        document.getElementById('imageFileInput').style.display = 'block';
+        document.getElementById('csvFileInput').style.display = 'none';
+    } else {
+        document.getElementById('csvFileInput').style.display = 'block';
+        document.getElementById('imageFileInput').style.display = 'none';
+    }
+}
+
+document.getElementById('csvFileInput').addEventListener('change', function(event) {
+    showMapAndControls();
+});
+
+document.getElementById('imageFileInput').addEventListener('change', function(event) {
+    showMapAndControls();
+});
+
+function showMapAndControls() {
+    // Afficher la carte
+    document.getElementById('mapContainer').style.visibility = 'visible';
+    // Masquer les inputs
+    document.getElementById('fileInputs').style.visibility = 'hidden';
+    // Vous pouvez ajouter d'autres actions ici (ex: afficher des boutons de contrôle)
+}
+
+// Votre code pour afficher la carte et gérer les événements...
