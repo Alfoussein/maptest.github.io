@@ -68,8 +68,10 @@ function addMarkerToMap(info, col2, coordinates) {
             return; // Ne rien faire si le marqueur est déjà sélectionné
         }
 
+
         let index = linkedArray.findIndex(data => data.address === info);
 
+        //relate adress and user in one array
         if(boolOCR){
             sortDeliveryArray.push(linkedArray[index]);
             linkedArray.splice(index, 1);
@@ -103,6 +105,8 @@ function addMarkerToMap(info, col2, coordinates) {
         if (selectedAddresses.length === 9) {
             if (confirm("Vous avez sélectionné 9 adresses. Voulez-vous continuer ?")) {
                 // Supprime les marqueurs de la carte après confirmation
+                document.querySelector('#addressTable').style.display = 'block';
+
                 markers.forEach(marker => {
                     map.removeLayer(marker);
                 });
@@ -348,6 +352,8 @@ document.querySelector('#validateListButton').addEventListener('click', function
         return;
     }
 
+    document.querySelector('#addressTable').style.display = 'block';
+
     // Générer l'URL et les éléments associés
     generateGoogleMapsUrl();
     // generateCol2Div();
@@ -429,54 +435,62 @@ function mergeArray(selectedPreviousElements){
 }
 
 function displayanimation(){
-    document.getElementById('addressTableContainer').animate(
-        [{ top: "100%" },{ top: '65%' } ],{
-            // sync options
-            duration: 3000,
-            // iterations: Infinity
-        })
+
+    if (window.innerWidth < 900) {
+        document.getElementById('addressTableContainer').animate(
+            [{ top: "100%" },{ top: '65%' } ],{
+                // sync options
+                duration: 3000,
+                // iterations: Infinity
+            })
+    }else{
+        document.getElementById('addressTableContainer').animate(
+            [{ top: "100%" },{ top: '0%' } ],{
+                // sync options
+                duration: 1500,
+                // iterations: Infinity
+            })
+    }
+    
 }
 
-document.getElementById('tsfButton').addEventListener('click', function() {
+document.querySelector('#tsfButton').addEventListener('click', function() {
     showFileInput('image');
 });
 
-document.getElementById('otherButton').addEventListener('click', function() {
+document.querySelector('#otherButton').addEventListener('click', function() {
     showFileInput('csv');
 });
 
 function showFileInput(type) {
     // Masquer le menu
-    document.getElementById('menuContainer').style.visibility = 'hidden';
+    document.querySelector('#menuContainer').style.visibility = 'hidden';
     // Afficher les inputs
-    document.getElementById('fileInputs').style.visibility = 'visible';
+    document.querySelector('#fileInputs').style.visibility = 'visible';
     // Afficher l'input correspondant
     if (type === 'image') {
-        document.getElementById('imageFileInput').style.display = 'block';
-        document.getElementById('csvFileInput').style.display = 'none';
+        document.querySelector('#imageFileInput').style.display = 'block';
+        document.querySelector('#csvFileInput').style.display = 'none';
     } else {
-        document.getElementById('csvFileInput').style.display = 'block';
-        document.getElementById('imageFileInput').style.display = 'none';
+        document.querySelector('#csvFileInput').style.display = 'block';
+        document.querySelector('#imageFileInput').style.display = 'none';
     }
-    ;
 }
 
-document.getElementById('csvFileInput').addEventListener('change', function(event) {
+document.querySelector('#csvFileInput').addEventListener('change', function(event) {
     showMapAndControls();
 });
 
-document.getElementById('imageFileInput').addEventListener('change', function(event) {
+document.querySelector('#imageFileInput').addEventListener('change', function(event) {
     showMapAndControls();
 });
 
 function showMapAndControls() {
     // Afficher la carte
-    document.getElementById('mapContainer').style.visibility = 'visible';
+    document.querySelector('#mapContainer').style.visibility = 'visible';
     // Masquer les inputs
-    document.getElementById('fileInputs').style.visibility = 'hidden';
+    document.querySelector('#fileInputs').style.visibility = 'hidden';
     // Vous pouvez ajouter d'autres actions ici (ex: afficher des boutons de contrôle)
-    displayanimation()
-    //document.getElementById('addressTAbleContainer').style.zIndex = 10
+    displayanimation();
+    //document.querySelector('#addressTableContainer').style.zIndex = 10
 }
-
-// Votre code pour afficher la carte et gérer les événements...

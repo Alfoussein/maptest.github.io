@@ -8,43 +8,44 @@
     <link rel="stylesheet" href="./styles/style.css">
 </head>
 <body>
-    <div id="menuContainer">
-        <button id="tsfButton">TSF</button>
-        <button id="otherButton">Other</button>
-    </div>
-    
-    <div id="fileInputs">
-        <input type="file" id="csvFileInput" accept=".csv" />
-        <input type="file" id="imageFileInput" accept="image/*" multiple />
-    </div>
-    
-    <div id="mapContainer">
-        <button id="restartButton">Redémarrer</button>
-        <div id="map"></div>
-        <button id="undoButton" disabled>Annuler la sélection</button>
-        <button id="validateListButton">Valider la Liste</button>
-    </div>
-    
-    <div id="googleMapsUrls"></div>
-    
-    <div id="addressTableContainer">
-        <table id="addressTable">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Nom</th>
-                    <th>URL Google Maps</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Rows will be added here dynamically -->
-            </tbody>
-        </table>
-    </div>
-    
+    <header>
+        <nav id="menuContainer">
+            <button id="tsfButton" aria-label="TSF">TSF</button>
+            <button id="otherButton" aria-label="Other">Other</button>
+        </nav>
+    </header>
 
-    
-    
+    <main>
+        <section id="fileInputs">
+            <label for="csvFileInput">Sélectionner un fichier CSV:</label>
+            <input type="file" id="csvFileInput" accept=".csv" />
+            
+            <label for="imageFileInput">Sélectionner des images:</label>
+            <input type="file" id="imageFileInput" accept="image/*" multiple />
+        </section>
+        
+        <section id="mapContainer">
+            <button id="restartButton" aria-label="Redémarrer">Redémarrer</button>
+            <div id="map"></div>
+            <button id="undoButton" aria-label="Annuler la sélection" disabled>Annuler la sélection</button>
+            <button id="validateListButton" aria-label="Valider la Liste">Valider la Liste</button>
+        </section>
+        
+        <section id="addressTableContainer">
+            <table id="addressTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nom</th>
+                        <th>URL Google Maps</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows will be added here dynamically -->
+                </tbody>
+            </table>
+        </section>
+    </main>
 
     <!-- Inclusion de Leaflet, PapaParse et Tesseract.js -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>

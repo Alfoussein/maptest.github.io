@@ -11,10 +11,9 @@ body, html {
     font-family: Arial, sans-serif;
     display: flex;
     flex-direction: column;
-    overflow-y: auto; /* Enable vertical scrolling */
-    overflow-x: hidden; /* Hide horizontal scrolling if it occurs */
+    overflow-y: auto;
+    overflow-x: hidden;
 }
-
 
 #menuContainer {
     position: absolute;
@@ -22,7 +21,7 @@ body, html {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: #b0c4de; /* Gris métallisé */
+    background-color: #b0c4de;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -35,23 +34,19 @@ body, html {
     padding: 15px 30px;
     margin: 10px;
     border: none;
-    border-radius: 5px; /* Coins arrondis */
-    color: white; /* Couleur du texte */
-    background-color: #4CAF50; /* Couleur de fond vert */
-    cursor: pointer; /* Curseur de la souris */
-    transition: background-color 0.3s, transform 0.2s; /* Transition */
+    border-radius: 5px;
+    color: white;
+    background-color: #4CAF50;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
     animation-duration: 3s;
     animation-name: slideinButton;
 }
-
-
-
 
 @keyframes slideinButton {
     from {
         opacity: 0%;
     }
-
     to {
         top: 100%;
     }
@@ -59,8 +54,8 @@ body, html {
 
 #tsfButton:hover, #otherButton:hover,
 #restartButton:hover, #undoButton:hover, #validateListButton:hover {
-    background-color: #45a049; /* Couleur plus foncée au survol */
-    transform: scale(1.05); /* Agrandir légèrement au survol */
+    background-color: #45a049;
+    transform: scale(1.05);
 }
 
 #fileInputs {
@@ -73,30 +68,30 @@ body, html {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color: rgba(176, 196, 222, 0.9); /* Gris transparent */
-    z-index: 5; /* Moins que le menu pour que les boutons soient dessus */
-    visibility: hidden; /* Cacher au départ */
+    background-color: rgba(176, 196, 222, 0.9);
+    z-index: 5;
+    visibility: hidden;
 }
 
 input[type="file"] {
     margin: 10px;
     padding: 10px;
-    font-size: 1em; /* Taille de la police */
-    border: 2px solid #4CAF50; /* Bordure verte */
-    border-radius: 5px; /* Coins arrondis */
-    background-color: white; /* Fond blanc */
-    color: #333; /* Couleur du texte */
-    cursor: pointer; /* Curseur de la souris */
-    transition: border-color 0.3s; /* Transition */
+    font-size: 1em;
+    border: 2px solid #4CAF50;
+    border-radius: 5px;
+    background-color: white;
+    color: #333;
+    cursor: pointer;
+    transition: border-color 0.3s;
 }
 
 input[type="file"]:hover {
-    border-color: #45a049; /* Changer la bordure au survol */
+    border-color: #45a049;
 }
 
 input[type="file"]:focus {
-    outline: none; /* Retirer le contour par défaut */
-    border-color: #2e7d32; /* Bordure verte plus foncée au focus */
+    outline: none;
+    border-color: #2e7d32;
 }
 
 #mapContainer {
@@ -106,13 +101,13 @@ input[type="file"]:focus {
     width: 100%;
     height: 100%;
     z-index: 1;
-    visibility: hidden; /* Cacher au départ */
-    overflow-y: auto; /* Enable scrolling */
+    visibility: hidden;
+    overflow-y: auto;
 }
 
 #map {
     width: 70%;
-    height: calc(100vh - 100px); /* Réserve de la place pour les infos en bas */
+    height: 100%;
     z-index: 0;
 }
 
@@ -122,33 +117,38 @@ input[type="file"]:focus {
     left: 0;
     width: 100%;
     z-index: 5;
-    background-color: rgba(255, 255, 255, 0.8); /* Blanc transparent */
+    background-color: rgba(255, 255, 255, 0.8);
     padding: 10px;
 }
 
 #restartButton {
     position: absolute;
     left: 70px;
+    top: 10px;
     z-index: 1000;
 }
 
-#validateListButton, #undoButton {
-    position: relative;
-    bottom: 70px;
+#validateListButton{
+    position: absolute;
+    bottom: 10px;
     z-index: 400;
+    left: 25%;
 }
 
-/* Style du tableau pour le placer à droite */
+
+
+#undoButton {
+    right: 10px;
+}
+
 #addressTable {
-    width: 100%; /* Ajustez la largeur si nécessaire */
+    width: 100%;
     height: 100%;
- /* Légère ombre pour séparation */
-    display: block; 
 }
 
 #addressTable th, #addressTable td {
     border: 1px solid #4CAF50;
-    padding: 10px;
+    padding: 5px;
     text-align: left;
 }
 
@@ -157,94 +157,85 @@ input[type="file"]:focus {
     color: white;
 }
 
-
-/* Styles par défaut pour le tableau */
 #addressTableContainer {
     width: 30%;
     border-collapse: collapse;
-    position: absolute; /* Fixé à droite de l'écran */
-    top: 0px;
+    position: absolute;
+    top: 0;
     right: 0;
-    height: 100%; /* Prend toute la hauteur de la fenêtre */
-    overflow-y: auto; /* Scroll si nécessaire */
+    height: 100%;
+    overflow-y: auto;
     background-color: white;
     z-index: 5;
     box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-
 }
 
-li{
+li {
     list-style: none;
     margin-bottom: 15px;
 }
-/* Styles pour mobiles */
+
 @media (max-width: 900px) {
-   
-    #mapContainer{
-        position: relative;
+    #mapContainer {
+        position: absolute;
         overflow: hidden;
     }
 
     #map {
-        position: absolute;
+        /* position: absolute; */
         width: 100%;
-        height: 65%; /* Réserve de la place pour les infos en bas */
-        z-index: 0;
+        /* height: 65%; */
+        /* z-index: 0; */
     }
 
-    #undoButton{
+    #undoButton {
         display: none;
     }
 
     #addressTableContainer {
         position: absolute;
         top: 65%;
-        left: 0; /* Aligne le tableau à gauche */
-        right: 0; /* Aligne le tableau à droite */
-        background-color: rgb(244, 244, 244); /* Arrière-plan blanc */
-        z-index: 0; /* Assure que le tableau est au-dessus des autres éléments */
-        border-top: 1px solid #ccc; /* Bordure supérieure */
+        left: 0;
+        right: 0;
+        background-color: rgb(244, 244, 244);
+        z-index: 1;
+        border-top: 1px solid #ccc;
         width: 100%;
-        height: 100%;
+        height: 35%;
         display: block;
-        
-         /* animation-duration: 3s;
-        animation-name: slidein; */
     }
 
-
     #addressTable {
-        width: 100%; /* Ajustez la largeur si nécessaire */
-     /* Légère ombre pour séparation */
-     display: block; 
+        width: 100%;
     }
 
     #restartButton {
         position: absolute;
-        left: 70px;
+        left: 23%;
+        top: 10px;
         z-index: 1;
         width: 200px;
-        left: 23%;
         font-size: medium;
     }
 
-    #validateListButton{
+    #validateListButton {
         position: absolute;
         bottom: 35%;
+        left: 25%;
         z-index: 5;
         width: 200px;
-        left: 23%;
         font-size: medium;
     }
 
     table {
-        width: 100%; /* Le tableau prend toute la largeur disponible */
-        border-collapse: collapse; /* Évite les espaces entre les cellules */
+        width: 100%;
+        border-collapse: collapse;
     }
 
     th, td {
-        padding: 10px; /* Ajoute de l'espace dans les cellules */
+        padding: 10px;
     }
+
     td a {
         font-size: small;
     }
