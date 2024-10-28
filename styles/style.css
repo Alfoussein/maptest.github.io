@@ -206,6 +206,9 @@ li {
         font-size: medium;
         
     }
+ #undoGroupSelectedButton, #validateListButton {
+        font-size: 12px;
+    }
 
     #validateListButton {
         position: absolute;
@@ -213,7 +216,6 @@ li {
         left: 0%;
         z-index: 5;
         width: 200px;
-        font-size: medium;
         
     }
 

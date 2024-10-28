@@ -52,7 +52,7 @@ function attachMarkerClickEvent(marker, info, name, action) {
             alert("Ce marqueur a déjà été sélectionné.");
             return; // Ne rien faire si le marqueur est déjà sélectionné
         }
-
+        console.log("attachMarkerClickEvent --- marker.on")
         let index = linkedArray.findIndex(data => data.address === info);
        
         // Relate address and user in one array
@@ -64,13 +64,15 @@ function attachMarkerClickEvent(marker, info, name, action) {
             selectedNameValues.push(linkedArray[index].name);
             console.log(selectedNameValues);
             markers.push(marker);
+            console.log("here1")
         } else {
+
             selectedAddresses.push(info);
             selectedNameValues.push(name);
             markers.push(marker);
+            console.log("here2")
         }
         // Marquer le marqueur comme sélectionné
-        if ( action == "add") 
             marker.isSelected = true;
 
         // Changer l'icône du marqueur
@@ -150,7 +152,7 @@ async function undoGroupSelected() {
             getCoordinates(address)
                 .then(coords => {
                     // Vérification si l'adresse est déjà présente
-                    if (!selectedAddresses.includes(address)) {
+                    // if (!selectedAddresses.includes(address)) {
                         var marker = L.marker([coords.lat, coords.lng]).addTo(map);
                         //markers.push(marker);
                         marker.bindPopup(address).openPopup();
@@ -162,13 +164,19 @@ async function undoGroupSelected() {
                             popupAnchor: [1, -34],
                         })); 
 
+                       
+
                         // Réinitialisation de la propriété isSelected
                         marker.isSelected = false; 
+                        // selectedNameValues = [];
+                        console.log(countPeople = countPeople - 1)
                         attachMarkerClickEvent(marker, address, "", "undo")
                         
-                    }
+                    // }
                 });
         });
+
+        
 
         var tableBody = document.querySelector('#addressTable tbody');
         if (tableBody.lastChild) {
@@ -338,7 +346,7 @@ document.querySelector('#validateListButton').addEventListener('click', function
     
     // Réinitialiser les listes
     selectedAddresses = [];
-    //selectedNameValues = [];
+    selectedNameValues = [];
     markers.forEach(marker => {
         map.removeLayer(marker); // Supprime les marqueurs de la carte
     });
