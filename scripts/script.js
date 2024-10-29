@@ -23,9 +23,10 @@ let selectedPreviousElements;
 //Liste des mots-clés d'adresse
 const addressKeywords = [
     'rue', 'avenue', 'boulevard', 'place', 'chemin', 'route',
-    'square', 'impasse', 'allée', 'esplanade', 'passage', 'villa'
+    'square', 'impasse', 'allée', 'esplanade', 'passage', 'villa',
+    'quai', 'cité', 'cours', 'galerie', 'îlot', 'porte', 'faubourg', 'clos'
 ];
-  
+
 // Listes pour stocker les noms complets et les adresses
 const _fullNames = [];
 const _addresses = [];
