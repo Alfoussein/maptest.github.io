@@ -58,7 +58,7 @@ function attachMarkerClickEvent(marker, addrress, name, action) {
         
         console.log("attachMarkerClickEvent --- marker.on")
         //Find 
-        let index = linkedArray.findIndex(data => data.address === addrress);
+        let index = linkedArray.findIndex(data => data.name === name);
        
         // Relate address and user in one array
         if (boolOCR && index !== -1)  {
