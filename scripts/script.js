@@ -373,6 +373,8 @@ async function processRecognizedText(recognizedText) {
             return true;
         } else if (array[index + 2] && array[index + 2].startsWith(">") && !array[index-1].includes("Mme/m") && array[index].includes("Mme/m")) {
             return true;
+        }else if (array[index + 1] && array[index + 1].startsWith(">") && !array[index].includes("Mme/m") ) {
+            return true;
         }
         return false;
     });
