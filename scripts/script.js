@@ -8,22 +8,24 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-var apiKey = 'fc1af9eaec3c47c9b31d0dd09e0dc933';
+var apiKey = 'de012302a8b6464691dbd1df48f474fe';
 var selectedAddresses = [];
 var selectedNameValues = [];
 var markers = [];
 var selectedAddressesStorage = [];
+var selectedNamesStorage = [];
 var sortDeliveryArray = [];
 let linkedArray = [];
 const fullNameWithTitleRegex = /(Mme\/m|M|Mme)\s+([A-ZÀ-ÿ][a-zà-ÿ]+(?:\s+[A-ZÀ-ÿ][a-zà-ÿ]+)*)/g;
+const orderNumberDHL = /(000|JJD01|JJD00|JVGL|GLS)/;
 let boolOCR = false
-
-// Liste des mots-clés d'adresse
+let selectedPreviousElements;
+//Liste des mots-clés d'adresse
 const addressKeywords = [
     'rue', 'avenue', 'boulevard', 'place', 'chemin', 'route',
-    'square', 'impasse', 'allée', 'esplanade', 'passage'
+    'square', 'impasse', 'allée', 'esplanade', 'passage', 'villa'
 ];
-
+  
 // Listes pour stocker les noms complets et les adresses
 const _fullNames = [];
 const _addresses = [];
@@ -45,21 +47,25 @@ function getCoordinates(address) {
         });
 }
 
-function attachMarkerClickEvent(marker, info, name, action) {
+function attachMarkerClickEvent(marker, addrress, name, action) {
+
     marker.on('click', function() {
         // Vérifie si le marqueur a déjà été sélectionné
         if (marker.isSelected) {
             alert("Ce marqueur a déjà été sélectionné.");
             return; // Ne rien faire si le marqueur est déjà sélectionné
         }
+        
         console.log("attachMarkerClickEvent --- marker.on")
-        let index = linkedArray.findIndex(data => data.address === info);
+        //Find 
+        let index = linkedArray.findIndex(data => data.address === addrress);
        
         // Relate address and user in one array
         if (boolOCR && index !== -1)  {
             sortDeliveryArray.push(linkedArray[index]);
             //linkedArray.splice(index, 1);
-            selectedAddresses.push(info);
+            selectedAddresses.push(addrress);
+            
             // selectedNameValues.push(sortDeliveryArray[sortDeliveryArray.length - 1].name);
             selectedNameValues.push(linkedArray[index].name);
             console.log(selectedNameValues);
@@ -67,7 +73,7 @@ function attachMarkerClickEvent(marker, info, name, action) {
             console.log("here1")
         } else {
 
-            selectedAddresses.push(info);
+            selectedAddresses.push(addrress);
             selectedNameValues.push(name);
             markers.push(marker);
             console.log("here2")
@@ -123,7 +129,7 @@ function attachMarkerClickEvent(marker, info, name, action) {
 }
 
 
-function addMarkerToMap(info, name, coordinates) {
+function addMarkerToMap(address, name, coordinates) {
     if (selectedAddresses.length >= 9) {
         alert("Vous avez déjà sélectionné 9 adresses. Veuillez annuler une sélection avant d'en ajouter d'autres.");
         return;
@@ -131,14 +137,12 @@ function addMarkerToMap(info, name, coordinates) {
 
     // Création du marqueur et ajout à la carte
     var marker = L.marker([coordinates.lat, coordinates.lng]).addTo(map);
-    marker.bindPopup(`<b>${info} \n ${name}</b>`).openPopup();
-
-    console.log(selectedAddresses);
+    marker.bindPopup(`<b>${address} \n ${name}</b>`).openPopup();
 
     // Propriété pour suivre si le marqueur a déjà été sélectionné
     marker.isSelected = false;
 
-    attachMarkerClickEvent(marker, info, name, "add")
+    attachMarkerClickEvent(marker, address, name, "add")
 
 }
 
@@ -147,6 +151,9 @@ async function undoGroupSelected() {
 
     if (await selectedAddressesStorage.length > 0) {
         var lastGroup = await selectedAddressesStorage.pop(); // Prend le dernier tableau d'adresses
+        // console.log(selectedAddressesStorage);
+        // selectedNameValues = selectedNameStorage.pop();
+        // console.log(selectedNameValues);
         // Restauration des marqueurs du dernier tableau d'adresses
         await lastGroup.forEach(address => {
             getCoordinates(address)
@@ -254,11 +261,6 @@ function generateNameDiv() {
     document.querySelector('#concatnameContainer').appendChild(nameDiv);
 }
 
-// Assurez-vous que le conteneur pour le tableau est défini dans votre HTML
-// <div id="googleMapsUrls"></div>
-// <div id="concatnameContainer"></div>
-// <table id="urlTable"></table>
-
 
 document.querySelector('#undoGroupSelectedButton').addEventListener('click', undoGroupSelected);
 
@@ -343,7 +345,7 @@ document.querySelector('#validateListButton').addEventListener('click', function
     
     // Ajouter les adresses sélectionnées à la mémoire pour la restauration si nécessaire
     selectedAddressesStorage.push([...selectedAddresses]);
-    
+    selectedNamesStorage.push([...selectedNameValues]);
     // Réinitialiser les listes
     selectedAddresses = [];
     selectedNameValues = [];
@@ -363,7 +365,7 @@ async function processRecognizedText(recognizedText) {
     console.log(lines);
 
     //Sort name  first methode
-    const selectedPreviousElements = await lines.filter((line, index, array) => {
+    selectedPreviousElements = await lines.filter((line, index, array) => {
         if ( array[index + 2] && array[index + 2].startsWith(">") && array[index + 1].length == 0) {
             return true;
         } else if (array[index + 1] && array[index + 1].startsWith(">") && array[index].includes("Mme/m")) {
@@ -398,8 +400,9 @@ async function processRecognizedText(recognizedText) {
     
     console.log(_addresses)
     // Ajout des marqueurs pour chaque adresse trouvée
+    await mergeArrayOCR(selectedPreviousElements);
     await _addresses.forEach((address, index) => {
-        const name = _fullNames[index] || selectedPreviousElements[index]; // Utilisation d'une valeur par défaut si aucune valeur n'est trouvée
+        const name = selectedPreviousElements[index]; // Utilisation d'une valeur par défaut si aucune valeur n'est trouvée
         getCoordinates(address)
             .then(coords => {
                 addMarkerToMap(address, name, coords);
@@ -408,10 +411,10 @@ async function processRecognizedText(recognizedText) {
                 console.error(`Erreur lors du géocodage de l'adresse ${address}:`, error);
             });
     });
-    await mergeArray(selectedPreviousElements);
+
 }
 
-function mergeArray(selectedPreviousElements){
+function mergeArrayOCR(selectedPreviousElements){
     for (let i = 0; i < _addresses.length; i++) {
         linkedArray.push({ address: _addresses[i], name: selectedPreviousElements[i] });
     }
@@ -493,4 +496,63 @@ function showMapAndControls() {
     //document.querySelector('#addressTableContainer').style.zIndex = 10
 }
 
- 
+document.querySelector('#fusion').addEventListener('click', function(event) {
+    generateGoogleMapsUrlsFromMerged()
+}); 
+
+function generateGoogleMapsUrlsFromMerged() {
+
+    var urlBase = "https://www.google.fr/maps/dir/";
+    var nameListContainer = document.querySelector('#nameListContainer'); // Ensure this element exists in your HTML
+    var addressListContainer = document.querySelector('#addressListContainer'); // Ensure this element exists in your HTML
+    let count = 1;
+    var batchAddress = selectedAddressesStorage.flat()
+    var batchNames = selectedNamesStorage.flat()
+    // Clear previous content
+    nameListContainer.innerHTML = '';
+    addressListContainer.innerHTML = '';
+    console.log(batchAddress)
+    console.log(batchNames)
+    function createListNames(namesArray, addressArray) {
+
+        // Create name list item
+        var nameListItem = document.createElement('li');
+        var nameElements = '';
+
+        namesArray.forEach(function(value, index) {
+            nameElements += `<li>${count} - ${value}</li>`;
+        });
+
+        nameListItem.innerHTML = `${nameElements}`;
+        nameListContainer.appendChild(nameListItem);
+
+        var addressListItem = document.createElement('li');
+        var addressElements = '';
+
+        addressArray.forEach(function(value, index) {
+            addressElements += `<li>${count} - ${value}</li>`;
+        });
+
+        // addressListItem.innerHTML = `<a href="${fullUrl}" target="_blank">${fullUrl}</a>`;
+        addressListContainer.appendChild(addressListItem);
+
+        count++;
+    }
+
+
+    while (selectedAddressesStorage.length > 1) {
+        batchAddress.splice(0.9)
+        batchNames.splice(0.9)
+
+        if(batchAddress.length > 9 ){
+            createListNames(batchNames, batchAddress);
+        }
+    }
+
+    if (selectedAddressesStorage.length == 1) {
+        selectedAddressesStorage[0]
+        createListNames(batchNames, batchAddress);
+    }
+
+    count = 1;
+}

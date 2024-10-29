@@ -1,6 +1,7 @@
 //var apiKey = 'de012302a8b6464691dbd1df48f474fe';
 //var apiKey = 'fc1af9eaec3c47c9b31d0dd09e0dc933';
 
+
 var map = L.map('map').setView([48.8566, 2.3522], 12); // Coordonnées pour centrer sur la France
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -16,10 +17,6 @@ var sortDeliveryArray = [];
 let linkedArray = [];
 const fullNameWithTitleRegex = /(Mme\/m|M|Mme)\s+([A-ZÀ-ÿ][a-zà-ÿ]+(?:\s+[A-ZÀ-ÿ][a-zà-ÿ]+)*)/g;
 let boolOCR = false
-const ocrResult = `Mme/m MEDZA JACQUES
-Mme/m GRANEL JULIEN
-Mme/m ADRIEN FARRANDS
-Mme/m Elsa Rouiller`;
 
 // Liste des mots-clés d'adresse
 const addressKeywords = [
@@ -48,47 +45,35 @@ function getCoordinates(address) {
         });
 }
 
-function addMarkerToMap(info, name, coordinates) {
-    if (selectedAddresses.length >= 9) {
-        alert("Vous avez déjà sélectionné 9 adresses. Veuillez annuler une sélection avant d'en ajouter d'autres.");
-        return;
-    }
-
-    // Création du marqueur et ajout à la carte
-    var marker = L.marker([coordinates.lat, coordinates.lng]).addTo(map);
-    marker.bindPopup(`<b>${info} \n ${name}</b>`).openPopup();
-
-    // Propriété pour suivre si le marqueur a déjà été sélectionné
-    marker.isSelected = false;
-
+function attachMarkerClickEvent(marker, info, name, action) {
     marker.on('click', function() {
         // Vérifie si le marqueur a déjà été sélectionné
         if (marker.isSelected) {
             alert("Ce marqueur a déjà été sélectionné.");
             return; // Ne rien faire si le marqueur est déjà sélectionné
         }
-
-        console.log("toto");
+        console.log("attachMarkerClickEvent --- marker.on")
         let index = linkedArray.findIndex(data => data.address === info);
-
-        //relate adress and user in one array
-        if(boolOCR){
-            console.log("toto2");
-
+       
+        // Relate address and user in one array
+        if (boolOCR && index !== -1)  {
             sortDeliveryArray.push(linkedArray[index]);
-            linkedArray.splice(index, 1);
+            //linkedArray.splice(index, 1);
             selectedAddresses.push(info);
-            selectedNameValues.push(sortDeliveryArray[sortDeliveryArray.length-1].name);
+            // selectedNameValues.push(sortDeliveryArray[sortDeliveryArray.length - 1].name);
+            selectedNameValues.push(linkedArray[index].name);
+            console.log(selectedNameValues);
             markers.push(marker);
-        }else{
-            console.log("toto3");
+            console.log("here1")
+        } else {
 
             selectedAddresses.push(info);
             selectedNameValues.push(name);
             markers.push(marker);
+            console.log("here2")
         }
         // Marquer le marqueur comme sélectionné
-        marker.isSelected = true;
+            marker.isSelected = true;
 
         // Changer l'icône du marqueur
         marker.setIcon(L.icon({
@@ -98,29 +83,22 @@ function addMarkerToMap(info, name, coordinates) {
             popupAnchor: [1, -34],
         }));
 
-        
-        
-
-        document.querySelector('#undoButton').disabled = false;
+        //document.querySelector('#undoGroupSelectedButton').disabled = false;
 
         // Vérifie si vous avez atteint 9 sélections
         if (selectedAddresses.length === 9) {
             if (confirm("Vous avez sélectionné 9 adresses. Voulez-vous continuer ?")) {
-                // Supprime les marqueurs de la carte après confirmation
                 document.querySelector('#addressTable').style.display = 'block';
-
                 markers.forEach(marker => {
                     map.removeLayer(marker);
                 });
-                markers = []; // Réinitialise la liste des marqueurs
-                
+                markers = [];
                 generateGoogleMapsUrl();
-                //generateNameDiv();
                 selectedAddressesStorage.push([...selectedAddresses]);
-                selectedAddresses = []; // Réinitialise les adresses sélectionnées
+                selectedAddresses = [];
                 selectedNameValues = [];
+                console.log("ici")
             } else {
-                // Restauration des marqueurs et réinitialisation
                 markers.forEach(marker => {
                     marker.setIcon(L.icon({
                         iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
@@ -128,42 +106,58 @@ function addMarkerToMap(info, name, coordinates) {
                         iconAnchor: [12, 41],
                         popupAnchor: [1, -34],
                     }));
-                    marker.isSelected = false; // Réinitialiser la sélection
+                    marker.isSelected = false; 
                 });
-
-                // Réinitialiser la liste des adresses sélectionnées pour permettre une nouvelle sélection
                 selectedAddresses = [];
                 selectedNameValues = [];
             }
         } else if (selectedAddresses.length % 9 === 0 && selectedAddresses.length > 0) {
-            // Vérifie si le nombre total d'adresses sélectionnées est un multiple de 9 et génère l'URL
             if (confirm(`Vous avez sélectionné ${selectedAddresses.length} adresses. Voulez-vous générer l'URL ?`)) {
                 generateGoogleMapsUrl();
-                //generateNameDiv();
                 selectedAddressesStorage.push([...selectedAddresses]);
-                selectedAddresses = []; // Réinitialise les adresses sélectionnées
+                selectedAddresses = [];
                 selectedNameValues = [];
             }
         }
     });
+}
+
+
+function addMarkerToMap(info, name, coordinates) {
+    if (selectedAddresses.length >= 9) {
+        alert("Vous avez déjà sélectionné 9 adresses. Veuillez annuler une sélection avant d'en ajouter d'autres.");
+        return;
+    } 
+
+    // Création du marqueur et ajout à la carte
+    var marker = L.marker([coordinates.lat, coordinates.lng]).addTo(map);
+    marker.bindPopup(`<b>${info} \n ${name}</b>`).openPopup();
+
+    console.log(selectedAddresses);
+
+    // Propriété pour suivre si le marqueur a déjà été sélectionné
+    marker.isSelected = false;
+
+    attachMarkerClickEvent(marker, info, name, "add")
 
 }
 
 // Votre fonction d'annulation
-function undoSelection() {
-    console.log(selectedAddressesStorage)
+async function undoGroupSelected() {
 
-    if (selectedAddressesStorage.length > 0) {
-        var lastGroup = selectedAddressesStorage.pop(); // Prend le dernier tableau d'adresses
-
+    if (await selectedAddressesStorage.length > 0) {
+        var lastGroup = await selectedAddressesStorage.pop(); // Prend le dernier tableau d'adresses
+        // console.log(selectedAddressesStorage);
+        // selectedNameValues = selectedNameStorage.pop();
+        // console.log(selectedNameValues);
         // Restauration des marqueurs du dernier tableau d'adresses
-        lastGroup.forEach(address => {
+        await lastGroup.forEach(address => {
             getCoordinates(address)
                 .then(coords => {
                     // Vérification si l'adresse est déjà présente
-                    if (!selectedAddresses.includes(address)) {
+                    // if (!selectedAddresses.includes(address)) {
                         var marker = L.marker([coords.lat, coords.lng]).addTo(map);
-                        markers.push(marker);
+                        //markers.push(marker);
                         marker.bindPopup(address).openPopup();
                         
                         marker.setIcon(L.icon({
@@ -171,33 +165,21 @@ function undoSelection() {
                             iconSize: [25, 41],
                             iconAnchor: [12, 41],
                             popupAnchor: [1, -34],
-                        }));
+                        })); 
+
+                       
 
                         // Réinitialisation de la propriété isSelected
                         marker.isSelected = false; 
-
-                        marker.on('click', function() {
-                            // Vérifie si le marqueur a déjà été sélectionné
-                            if (marker.isSelected) {
-                                alert("Ce marqueur a déjà été sélectionné.");
-                                return; // Ne rien faire si le marqueur est déjà sélectionné
-                            }
-
-                            // Marquer le marqueur comme sélectionné
-                            marker.isSelected = true;
-
-                            // Changer l'icône du marqueur
-                            marker.setIcon(L.icon({
-                                iconUrl: 'https://cdn-icons-png.flaticon.com/512/64/64572.png',
-                                iconSize: [25, 21],
-                                iconAnchor: [12, 41],
-                                popupAnchor: [1, -34],
-                            }));
-                            selectedAddresses.push(address);
-                        });
-                    }
+                        // selectedNameValues = [];
+                        console.log(countPeople = countPeople - 1)
+                        attachMarkerClickEvent(marker, address, "", "undo")
+                        
+                    // }
                 });
         });
+
+        
 
         var tableBody = document.querySelector('#addressTable tbody');
         if (tableBody.lastChild) {
@@ -206,8 +188,9 @@ function undoSelection() {
 
         // Gestion de l'activation/désactivation du bouton undo
         if (tableBody.children.length === 0) {
-            //document.querySelector('#undoButton').disabled = true;
+            document.querySelector('#undoGroupSelectedButton').style.display = "none";
         }
+
     }
 }
 
@@ -280,7 +263,7 @@ function generateNameDiv() {
 // <table id="urlTable"></table>
 
 
-document.querySelector('#undoButton').addEventListener('click', undoSelection);
+document.querySelector('#undoGroupSelectedButton').addEventListener('click', undoGroupSelected);
 
 document.querySelector('#csvFileInput').addEventListener('change', function(event) {
     var file = event.target.files[0];
@@ -355,7 +338,6 @@ document.querySelector('#validateListButton').addEventListener('click', function
         alert("Aucune adresse sélectionnée pour valider.");
         return;
     }
-    console.log("vide valid")
     document.querySelector('#addressTable').style.display = 'block';
 
     // Générer l'URL et les éléments associés
@@ -364,7 +346,7 @@ document.querySelector('#validateListButton').addEventListener('click', function
     
     // Ajouter les adresses sélectionnées à la mémoire pour la restauration si nécessaire
     selectedAddressesStorage.push([...selectedAddresses]);
-    
+    // selectedNameStorage.push([...selectedNameValues]);
     // Réinitialiser les listes
     selectedAddresses = [];
     selectedNameValues = [];
@@ -372,6 +354,8 @@ document.querySelector('#validateListButton').addEventListener('click', function
         map.removeLayer(marker); // Supprime les marqueurs de la carte
     });
     markers = []; // Réinitialise la liste des marqueurs
+    document.querySelector('#undoGroupSelectedButton').style.display = "block";
+
 });
 
 
@@ -427,14 +411,13 @@ async function processRecognizedText(recognizedText) {
                 console.error(`Erreur lors du géocodage de l'adresse ${address}:`, error);
             });
     });
-    await mergeArray(selectedPreviousElements);
+    await mergeArrayOCR(selectedPreviousElements);
 }
 
-function mergeArray(selectedPreviousElements){
+function mergeArrayOCR(selectedPreviousElements){
     for (let i = 0; i < _addresses.length; i++) {
         linkedArray.push({ address: _addresses[i], name: selectedPreviousElements[i] });
     }
-    
     console.log( linkedArray);
 }
 
@@ -444,16 +427,22 @@ function displayanimation(){
         document.getElementById('addressTableContainer').animate(
             [{ top: "100%" },{ top: '65%' } ],{
                 // sync options
-                duration: 3000,
+                duration: 1500,
                 // iterations: Infinity
             })
 
         document.getElementById('validateListButton').animate(
             [{ bottom: "0%" },{ bottom: '35%' } ],{
                 // sync options
-                duration: 3000,
+                duration: 1500,
                 // iterations: Infinity
-            })    
+            })  
+            document.getElementById('undoGroupSelectedButton').animate(
+                [{ bottom: "0%" },{ bottom: '35%' } ],{
+                    // sync options
+                    duration: 1500,
+                    // iterations: Infinity
+                })    
     }else{
         document.getElementById('addressTableContainer').animate(
             [{ top: "100%" },{ top: '0%' } ],{
@@ -496,6 +485,7 @@ document.querySelector('#imageFileInput').addEventListener('change', function(ev
     showMapAndControls();
 });
 
+
 function showMapAndControls() {
     // Afficher la carte
     document.querySelector('#mapContainer').style.visibility = 'visible';
@@ -505,4 +495,6 @@ function showMapAndControls() {
     displayanimation();
     //document.querySelector('#addressTableContainer').style.zIndex = 10
 }
+
+ 
 

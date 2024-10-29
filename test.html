@@ -1,62 +1,66 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carte avec MapTiler Sans Bibliothèque</title>
-    <style>
-        #map {
-            width: 100%;
-            height: 500px;
-            background-color: #ddd;
-        }
-        .button {
-            padding: 5px 10px;
-            margin: 10px;
-            cursor: pointer;
-        }
-    </style>
+    <title>Leaflet avec fonction Undo et OCR</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="./styles/style.css">
 </head>
 <body>
-    <div id="map"></div>
-    <button id="zoom-in" class="button">Zoom In</button>
-    <button id="zoom-out" class="button">Zoom Out</button>
+    <header>
+        <nav id="menuContainer">
+            <button id="tsfButton" aria-label="TSF">TSF</button>
+            <button id="otherButton" aria-label="Other">Other</button>
+        </nav>
+    </header>
 
-    <script>
-        // Paramètres de la carte
-        const mapTilerKey = 'zB6e9ArV18KgDJAUN7sn';
-        const tileUrl = `https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=${mapTilerKey}`;
+    <main>
+        <section id="fileInputs">
+            <label for="csvFileInput">Sélectionner un fichier CSV:</label>
+            <input type="file" id="csvFileInput" accept=".csv" />
+            
+            <label for="imageFileInput">Sélectionner des images:</label>
+            <input type="file" id="imageFileInput" accept="image/*" multiple />
+        </section>
+        
+        <section id="mapContainer">
+            <!-- <button id="restartButton" aria-label="Redémarrer">Redémarrer</button> -->
+            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="25" height="25" viewBox="0 0 50 50" id="restartButton"> <path d="M 25 2 A 2.0002 2.0002 0 1 0 25 6 C 35.517124 6 44 14.482876 44 25 C 44 35.517124 35.517124 44 25 44 C 14.482876 44 6 35.517124 6 25 C 6 19.524201 8.3080175 14.608106 12 11.144531 L 12 15 A 2.0002 2.0002 0 1 0 16 15 L 16 4 L 5 4 A 2.0002 2.0002 0 1 0 5 8 L 9.5253906 8 C 4.9067015 12.20948 2 18.272325 2 25 C 2 37.678876 12.321124 48 25 48 C 37.678876 48 48 37.678876 48 25 C 48 12.321124 37.678876 2 25 2 z"></path> </svg>
+            <div id="map"></div>
+            <button id="undoGroupSelectedButton" aria-label="Annuler la sélection" >Annuler la derniere selection</button>
+            <button id="validateListButton" aria-label="Valider la Liste">Valider la liste en cour</button>
+        </section>
+        
+        <section id="addressTableContainer">
+            <table id="addressTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nom</th>
+                        <th>URL Google Maps</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows will be added here dynamically -->
+                </tbody>
+            </table>
+        </section>
 
-        // Configuration initiale de la carte
-        let zoomLevel = 12;
-        let mapElement = document.getElementById("map");
-        let centerCoordinates = { lat: 48.8566, lng: 2.3522 }; // Paris
 
-        // Créer un élément d'image et charger les tuiles MapTiler
-        function loadMap() {
-            const tileImage = document.createElement("div");
-            tileImage.style.backgroundImage = `url('${tileUrl.replace('{z}', zoomLevel).replace('{x}', Math.floor(centerCoordinates.lng)).replace('{y}', Math.floor(centerCoordinates.lat))}')`;
-            tileImage.style.width = "100%";
-            tileImage.style.height = "100%";
-            mapElement.appendChild(tileImage);
-        }
+    </main>
 
-        // Zoomer et dézoomer
-        document.getElementById("zoom-in").onclick = function () {
-            if (zoomLevel < 18) {
-                zoomLevel++;
-                loadMap();
-            }
-        };
-        document.getElementById("zoom-out").onclick = function () {
-            if (zoomLevel > 2) {
-                zoomLevel--;
-                loadMap();
-            }
-        };
-
-        // Charger la carte pour la première fois
-        loadMap();
-    </script>
+    <!-- Inclusion de Leaflet, PapaParse et Tesseract.js -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4"></script>
+    <script src="https://smtpjs.com/v3/smtp.js"></script>
+    <script src="./scriptOrganized/global.js" async></script>
+    <script src="./scriptOrganized/map.js" async></script>
+    <script src="./scriptOrganized/api.js" async></script>
+    <script src="./scriptOrganized/fileHandler.js" async></script>
+    <script src="./scriptOrganized/addressProcessing.js" async></script>
+    <script src="./scriptOrganized/uiHandler.js" async></script>
+    <script src="./scriptOrganized/main.js" async></script>
 </body>
 </html>
