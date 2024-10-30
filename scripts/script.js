@@ -209,7 +209,7 @@ async function undoGroupSelected() {
 
 
 function generateGoogleMapsUrl() {
-    var urlBase = "https://www.google.fr/maps/dir/paris, france";
+    var urlBase = "https://www.google.fr/maps/dir/paris, france/";
     var concatenatedAddresses = selectedAddresses.join('/');
     var fullUrl = urlBase + concatenatedAddresses;
 
