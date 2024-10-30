@@ -24,7 +24,11 @@ let selectedPreviousElements;
 const addressKeywords = [
     'rue', 'avenue', 'boulevard', 'place', 'chemin', 'route',
     'square', 'impasse', 'allée', 'esplanade', 'passage', 'villa',
-    'quai', 'cité', 'cours', 'galerie', 'îlot', 'porte', 'faubourg', 'clos'
+    'quai', 'cité', 'cours', 'galerie', 'îlot', 'porte', 'faubourg',
+];
+
+const refPackKeywords = [
+    'LORL', 'LORP', 'TFA', 'LORN'
 ];
 
 // Listes pour stocker les noms complets et les adresses
@@ -93,8 +97,8 @@ function attachMarkerClickEvent(marker, addrress, name, action) {
         //document.querySelector('#undoGroupSelectedButton').disabled = false;
 
         // Vérifie si vous avez atteint 9 sélections
-        if (selectedAddresses.length === 9) {
-            if (confirm("Vous avez sélectionné 9 adresses. Voulez-vous continuer ?")) {
+        if (selectedAddresses.length === 8) {
+            if (confirm("Vous avez sélectionné 8 adresses. Voulez-vous continuer ?")) {
                 document.querySelector('#addressTable').style.display = 'block';
                 markers.forEach(marker => {
                     map.removeLayer(marker);
@@ -118,7 +122,7 @@ function attachMarkerClickEvent(marker, addrress, name, action) {
                 selectedAddresses = [];
                 selectedNameValues = [];
             }
-        } else if (selectedAddresses.length % 9 === 0 && selectedAddresses.length > 0) {
+        } else if (selectedAddresses.length % 8 === 0 && selectedAddresses.length > 0) {
             if (confirm(`Vous avez sélectionné ${selectedAddresses.length} adresses. Voulez-vous générer l'URL ?`)) {
                 generateGoogleMapsUrl();
                 selectedAddressesStorage.push([...selectedAddresses]);
@@ -131,8 +135,8 @@ function attachMarkerClickEvent(marker, addrress, name, action) {
 
 
 function addMarkerToMap(address, name, coordinates) {
-    if (selectedAddresses.length >= 9) {
-        alert("Vous avez déjà sélectionné 9 adresses. Veuillez annuler une sélection avant d'en ajouter d'autres.");
+    if (selectedAddresses.length >= 8) {
+        alert("Vous avez déjà sélectionné 8 adresses. Veuillez annuler une sélection avant d'en ajouter d'autres.");
         return;
     } 
 
@@ -201,7 +205,7 @@ async function undoGroupSelected() {
 
 
 function generateGoogleMapsUrl() {
-    var urlBase = "https://www.google.fr/maps/dir/";
+    var urlBase = "https://www.google.fr/maps/dir/paris, france";
     var concatenatedAddresses = selectedAddresses.join('/');
     var fullUrl = urlBase + concatenatedAddresses;
 
@@ -209,13 +213,16 @@ function generateGoogleMapsUrl() {
     var tableBody = document.querySelector('#addressTable tbody');
     var newRow = document.createElement('tr');
 
+
+
+
     // Add a numbered cell
     var rowNumber = tableBody.children.length + 1; // Calculate the row number
 
     // Create the list items directly
     var liElements = '';
-    selectedNameValues.forEach(function(value) {
-        liElements += `<li>${countPeople} - ${value}</li>`;
+    selectedNameValues.forEach(function(value, index) {
+        liElements += `<li><a href="${urlBase +selectedAddresses[index]}">${countPeople} - ${value}</a></li>`;
         countPeople++;
     });
 
@@ -232,7 +239,7 @@ function generateGoogleMapsUrl() {
     
 }
 
-
+   
 
 function generateNameDiv() {
     var nameDiv = document.createElement('div');
@@ -367,21 +374,37 @@ async function processRecognizedText(recognizedText) {
 
     //Sort name  first methode
     selectedPreviousElements = await lines.filter((line, index, array) => {
-        if ( array[index + 2] && array[index + 2].startsWith(">") && array[index + 1].length == 0) {
+        if ( array[index + 2] 
+            && array[index + 2].startsWith(">") 
+            && array[index + 1].length == 0) {
+            console.log(refPackKeywords)
             return true;
-        } else if (array[index + 1] && array[index + 1].startsWith(">") && array[index].includes("Mme/m")) {
+
+        } else if (array[index + 1] 
+            && array[index + 1].startsWith(">") 
+            && array[index].includes("Mme/m")) {
+            console.log(refPackKeywords)
             return true;
-        } else if (array[index + 2] && array[index + 2].startsWith(">") && !array[index-1].includes("Mme/m") && array[index].includes("Mme/m")) {
+
+        } else if (array[index + 2] 
+            && array[index + 2].startsWith(">") 
+            && !array[index-1].includes("Mme/m") 
+            && array[index].includes("Mme/m")) {
+            console.log(refPackKeywords)
             return true;
-        }else if (array[index + 1] && array[index + 1].startsWith(">") && !array[index].includes("Mme/m") ) {
+
+        }else if (array[index + 1] 
+            && array[index + 1].startsWith(">") 
+            && (array[index].includes("Mme/m") || refPackKeywords.some(keyword => array[index - 1].includes(keyword)))) {
+            console.log(refPackKeywords)
             return true;
         }
         return false;
     });
-
+  
     console.log(selectedPreviousElements);
 
-    //Sort name second methode
+    //Sort name second methode 
     await lines.forEach(line => {
         const titleMatch = line.match(fullNameWithTitleRegex);
         
@@ -391,10 +414,13 @@ async function processRecognizedText(recognizedText) {
 
         // Recherche des adresses
         addressKeywords.forEach(keyword => {
-            if (line.toLowerCase().includes(keyword)) {
-                // Enlève caractères spéciaux
+            if (line.toLowerCase().includes(" "+keyword+" ")) {
+                if (line.toLowerCase().startsWith(">")) {
+
+                    // Enlève caractères spéciaux
                 const address = cleanAddress(line.trim());
                 _addresses.push(address);
+                }
             }
         });
     });
@@ -488,7 +514,7 @@ document.querySelector('#imageFileInput').addEventListener('change', function(ev
     showMapAndControls();
 });
 
-
+ 
 function showMapAndControls() {
     // Afficher la carte
     document.querySelector('#mapContainer').style.visibility = 'visible';
@@ -500,62 +526,72 @@ function showMapAndControls() {
 }
 
 document.querySelector('#fusion').addEventListener('click', function(event) {
-    generateGoogleMapsUrlsFromMerged()
+    let allAddrresesArray = selectedAddressesStorage.flat()
+    generateListInHtml(allAddrresesArray)
 }); 
 
-function generateGoogleMapsUrlsFromMerged() {
+let addressContainer= document.querySelector('#addressListContainer');  
+function generateListInHtml(allAddrresesArray){
 
-    var urlBase = "https://www.google.fr/maps/dir/";
-    var nameListContainer = document.querySelector('#nameListContainer'); // Ensure this element exists in your HTML
-    var addressListContainer = document.querySelector('#addressListContainer'); // Ensure this element exists in your HTML
-    let count = 1;
-    var batchAddress = selectedAddressesStorage.flat()
-    var batchNames = selectedNamesStorage.flat()
-    // Clear previous content
-    nameListContainer.innerHTML = '';
-    addressListContainer.innerHTML = '';
-    console.log(batchAddress)
-    console.log(batchNames)
-    function createListNames(namesArray, addressArray) {
+    var urlBase = "https://www.google.fr/maps/dir/paris, France/";
+    
+    
 
-        // Create name list item
-        var nameListItem = document.createElement('li');
-        var nameElements = '';
-
-        namesArray.forEach(function(value, index) {
-            nameElements += `<li>${count} - ${value}</li>`;
-        });
-
-        nameListItem.innerHTML = `${nameElements}`;
-        nameListContainer.appendChild(nameListItem);
-
-        var addressListItem = document.createElement('li');
-        var addressElements = '';
-
-        addressArray.forEach(function(value, index) {
-            addressElements += `<li>${count} - ${value}</li>`;
-        });
-
-        // addressListItem.innerHTML = `<a href="${fullUrl}" target="_blank">${fullUrl}</a>`;
-        addressListContainer.appendChild(addressListItem);
-
-        count++;
+    while(allAddrresesArray.length >= 8){
+        var newLiElement = document.createElement('li');
+        let nineAddrressesSelected = allAddrresesArray.splice(0, 8);
+        var concatenatedAddresses = nineAddrressesSelected.join('/');
+        var fullUrl = urlBase + concatenatedAddresses;
+        var linkElements = `<a href="${fullUrl}">${fullUrl}</a>`
+        newLiElement.innerHTML = linkElements;
+        addressContainer.appendChild(newLiElement);
     }
 
 
-    while (selectedAddressesStorage.length > 1) {
-        batchAddress.splice(0.9)
-        batchNames.splice(0.9)
+    if(allAddrresesArray.length < 8 && allAddrresesArray.length > 0){
+        var newLiElement = document.createElement('li');
+        var concatenatedAddresses = allAddrresesArray.join('/');
+        var fullUrl = urlBase + concatenatedAddresses;
+        var linkElements = `<a href="${fullUrl}">${fullUrl}</a>`
+        console.log(fullUrl)
+        newLiElement.innerHTML = linkElements;
+        addressContainer.appendChild(newLiElement);
+    }    
 
-        if(batchAddress.length > 9 ){
-            createListNames(batchNames, batchAddress);
-        }
-    }
 
-    if (selectedAddressesStorage.length == 1) {
-        selectedAddressesStorage[0]
-        createListNames(batchNames, batchAddress);
-    }
-
-    count = 1;
 }
+
+document.querySelector('#copyButton');
+copyButton.addEventListener('click', function() {
+    var range = document.createRange();
+    range.selectNode(addressContainer);
+    window.getSelection().removeAllRanges(); // clear existing selections
+    window.getSelection().addRange(range);
+    
+    try {
+        document.execCommand('copy');
+        alert('All links copied to clipboard');
+    } catch (err) {
+        console.error('Unable to copy', err);
+    }
+
+    window.getSelection().removeAllRanges(); // clear selections
+});
+
+let boolDisplayongFullScreenTAble = false
+let thirdchildOfThead = document.querySelector('thead').children[0].children[2];console.log(thirdchildOfThead)
+    thirdchildOfThead.addEventListener('click', function(event) {
+    
+    
+    if (window.innerWidth < 900 && !boolDisplayongFullScreenTAble ) {
+        document.getElementById('addressTableContainer').animate([{ top: "65%" },{ top: '15%' } ],{duration: 1500, }) 
+        document.querySelector('#addressTableContainer').style.top = "15%";
+        boolDisplayongFullScreenTAble  = true
+    }
+    else{
+        document.getElementById('addressTableContainer').animate([{ top: "15%" },{ top: '65%' } ],{duration: 1500, }) 
+        document.querySelector('#addressTableContainer').style.top = "65%";
+        boolDisplayongFullScreenTAble  = false
+    }
+    
+})
