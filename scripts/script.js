@@ -367,9 +367,13 @@ document.querySelector('#validateListButton').addEventListener('click', function
     markers = []; // Réinitialise la liste des marqueurs
     document.querySelector('#undoGroupSelectedButton').style.display = "block";
 
+    document.querySelector('#fusion').style.zIndex = "10";
+
 });
 
-
+document.querySelector('#fusion').addEventListener('click', () => { 
+    document.querySelector('#copyButton').style.zIndex = "10" 
+})
 // Fonction pour traiter le texte reconnu
 async function processRecognizedText(recognizedText) {
     boolOCR = true

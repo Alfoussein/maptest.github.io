@@ -167,9 +167,21 @@ li {
 }
 
 
+#fusion{
+    position: absolute;
+    z-index: 0;
+    top: 11%;
+    right: 7%;
+    height: 35px;
+    width: 60px;
+    border-radius: 25%;
+
+}
+
+
 #copyButton{
     position: absolute;
-    z-index: 10;
+    z-index: 0;
     bottom: 0%;
     left: 35%;
     height: 40px;
@@ -259,7 +271,20 @@ li {
     }
 
     #fusion{
-        position: absolute;
-        z-index: 100;
+        top: 11%;
+        right: 7%;
+        height: 35px;
+        width: 60px;
+        border-radius: 25%;
+        background-color: dodgerblue;
+    
+    }
+
+    #copyButton{
+        bottom: 0%;
+        left: 35%;
+        height: 40px;
+        width: 110px;
+        background-color: dodgerblue;
     }
 }
