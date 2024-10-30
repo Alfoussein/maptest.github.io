@@ -10,7 +10,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 var apiKey = 'de012302a8b6464691dbd1df48f474fe';
 var selectedAddresses = [];
-var selectedNameValues = [];
+var selectedNamesValues = [];
 var markers = [];
 var selectedAddressesStorage = [];
 var selectedNamesStorage = [];
@@ -71,15 +71,15 @@ function attachMarkerClickEvent(marker, addrress, name, action) {
             //linkedArray.splice(index, 1);
             selectedAddresses.push(addrress);
             
-            // selectedNameValues.push(sortDeliveryArray[sortDeliveryArray.length - 1].name);
-            selectedNameValues.push(linkedArray[index].name);
-            console.log(selectedNameValues);
+            // selectedNamesValues.push(sortDeliveryArray[sortDeliveryArray.length - 1].name);
+            selectedNamesValues.push(linkedArray[index].name);
+            console.log(selectedNamesValues);
             markers.push(marker);
             console.log("here1")
         } else {
 
             selectedAddresses.push(addrress);
-            selectedNameValues.push(name);
+            selectedNamesValues.push(name);
             markers.push(marker);
             console.log("here2")
         }
@@ -106,8 +106,9 @@ function attachMarkerClickEvent(marker, addrress, name, action) {
                 markers = [];
                 generateGoogleMapsUrl();
                 selectedAddressesStorage.push([...selectedAddresses]);
+                selectedNamesStorage.push([...selectedNamesValues]);
                 selectedAddresses = [];
-                selectedNameValues = [];
+                selectedNamesValues = [];
                 console.log("ici")
             } else {
                 markers.forEach(marker => {
@@ -120,14 +121,14 @@ function attachMarkerClickEvent(marker, addrress, name, action) {
                     marker.isSelected = false; 
                 });
                 selectedAddresses = [];
-                selectedNameValues = [];
+                selectedNamesValues = [];
             }
         } else if (selectedAddresses.length % 8 === 0 && selectedAddresses.length > 0) {
             if (confirm(`Vous avez sélectionné ${selectedAddresses.length} adresses. Voulez-vous générer l'URL ?`)) {
                 generateGoogleMapsUrl();
                 selectedAddressesStorage.push([...selectedAddresses]);
                 selectedAddresses = [];
-                selectedNameValues = [];
+                selectedNamesValues = [];
             }
         }
     });
@@ -155,20 +156,23 @@ function addMarkerToMap(address, name, coordinates) {
 async function undoGroupSelected() {
 
     if (await selectedAddressesStorage.length > 0) {
-        var lastGroup = await selectedAddressesStorage.pop(); // Prend le dernier tableau d'adresses
+        var lastGroupAddress = await selectedAddressesStorage.pop(); // Prend le dernier tableau d'adresses
+        let lastGroupName = await  selectedNamesStorage.pop()
         // console.log(selectedAddressesStorage);
-        // selectedNameValues = selectedNameStorage.pop();
-        // console.log(selectedNameValues);
+        // selectedNamesValues = selectedNameStorage.pop();
+        // console.log(selectedNamesValues);
         // Restauration des marqueurs du dernier tableau d'adresses
-        await lastGroup.forEach(address => {
+        await lastGroupAddress.forEach((address, index) => {
             getCoordinates(address)
                 .then(coords => {
+                    
+                    let name = lastGroupName[index];
                     // Vérification si l'adresse est déjà présente
                     // if (!selectedAddresses.includes(address)) {
                         var marker = L.marker([coords.lat, coords.lng]).addTo(map);
                         //markers.push(marker);
-                        marker.bindPopup(address).openPopup();
-                        
+                        marker.bindPopup(`<b>${address} \n ${name}</b>`).openPopup();
+                         
                         marker.setIcon(L.icon({
                             iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
                             iconSize: [25, 41],
@@ -180,7 +184,7 @@ async function undoGroupSelected() {
 
                         // Réinitialisation de la propriété isSelected
                         marker.isSelected = false; 
-                        // selectedNameValues = [];
+                        // selectedNamesValues = [];
                         console.log(countPeople = countPeople - 1)
                         attachMarkerClickEvent(marker, address, "", "undo")
                         
@@ -221,7 +225,7 @@ function generateGoogleMapsUrl() {
 
     // Create the list items directly
     var liElements = '';
-    selectedNameValues.forEach(function(value, index) {
+    selectedNamesValues.forEach(function(value, index) {
         liElements += `<li><a href="${urlBase +selectedAddresses[index]}">${countPeople} - ${value}</a></li>`;
         countPeople++;
     });
@@ -256,7 +260,7 @@ function generateNameDiv() {
     header2.textContent = 'URLs'; // Titre de la seconde colonne
 
     // Remplis le tableau avec les données
-    selectedNameValues.forEach((value, index) => {
+    selectedNamesValues.forEach((value, index) => {
         var row = table.insertRow();
         var demandCell = row.insertCell(0);
         var urlCell = row.insertCell(1);
@@ -353,10 +357,10 @@ document.querySelector('#validateListButton').addEventListener('click', function
     
     // Ajouter les adresses sélectionnées à la mémoire pour la restauration si nécessaire
     selectedAddressesStorage.push([...selectedAddresses]);
-    selectedNamesStorage.push([...selectedNameValues]);
+    selectedNamesStorage.push([...selectedNamesValues]);
     // Réinitialiser les listes
     selectedAddresses = [];
-    selectedNameValues = [];
+    selectedNamesValues = [];
     markers.forEach(marker => {
         map.removeLayer(marker); // Supprime les marqueurs de la carte
     });
