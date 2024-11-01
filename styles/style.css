@@ -132,10 +132,6 @@ input[type="file"]:focus {
     right: 10px;
 }
 
-#addressTable {
-    width: 100%;
-    height: 100%;
-}
 
 #addressTable th, #addressTable td {
     border: 1px solid #333;
@@ -146,10 +142,10 @@ input[type="file"]:focus {
 #addressTable th {
     background-color: #333;
     color: white;
+    width:100%;
 }
 
 #addressTableContainer {
-    width: 30%;
     border-collapse: collapse;
     position: absolute;
     top: 0;
@@ -159,6 +155,7 @@ input[type="file"]:focus {
     background-color: white;
     z-index: 5;
     box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    width:35%;
 }
 
 li {
@@ -216,10 +213,22 @@ li {
         display: none;
     }
 
-
+    #addressTableContainer {
+        position: absolute;
+        top: 65%;
+        left: 0;
+        right: 0;
+        background-color: rgb(244, 244, 244);
+        z-index: 1;
+        border-top: 1px solid #ccc;
+        height: 100%;
+        display: block;
+        width:100%;
+    }
 
     #addressTable {
         width: 100%;
+        display: inline-table;
     }
 
     #restartButton {
@@ -244,21 +253,9 @@ li {
         
     }
 
-    #addressTableContainer {
-        position: absolute;
-        top: 65%;
-        left: 0;
-        right: 0;
-        background-color: rgb(244, 244, 244);
-        z-index: 1;
-        border-top: 1px solid #ccc;
-        width: 100%;
-        height: 100%;
-        display: block;
-    }
+
 
     table {
-        width: 100%;
         border-collapse: collapse;
     }
 
@@ -266,8 +263,13 @@ li {
         padding: 10px;
     }
 
+    td li {
+        padding-left: 10%;
+        padding-right: 10%;
+    }
+
     td a {
-        font-size: small;
+        font-size: 25px;
     }
 
     #fusion{
@@ -281,6 +283,7 @@ li {
     }
 
     #copyButton{
+        position: fixed;
         bottom: 0%;
         left: 35%;
         height: 40px;
