@@ -666,4 +666,4 @@ document.querySelector('thead').addEventListener('click', function(event) {
         boolDisplayongFullScreenTAble  = false
     }
     
-})
+}) 

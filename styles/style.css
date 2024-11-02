@@ -96,7 +96,7 @@ input[type="file"]:focus {
 }
 
 #map {
-    width: 70%;
+    width: 66%;
     height: 100%;
     z-index: 0;
 }
@@ -120,10 +120,10 @@ input[type="file"]:focus {
 
 
 #validateListButton{
-    position: absolute;
+    position: fixed;
     bottom: 10px;
     z-index: 400;
-    left: 25%;
+    left: 20%;
 }
 
 
@@ -132,6 +132,9 @@ input[type="file"]:focus {
     right: 10px;
 }
 
+#addressTable  {
+    width: 100%;
+}
 
 #addressTable th, #addressTable td {
     border: 1px solid #333;
@@ -165,14 +168,15 @@ li {
 
 
 #fusion{
-    position: absolute;
+    position: fixed;
     z-index: 0;
-    top: 11%;
-    right: 7%;
-    height: 35px;
-    width: 60px;
-    border-radius: 25%;
-
+    top: 6%;
+    right: 66%;
+    height: 70px;
+    width: 100px;
+    border-radius: 14%;
+    font-size: 22px;
+    background-color: blue;
 }
 
 
@@ -273,13 +277,13 @@ li {
     }
 
     #fusion{
-        top: 11%;
-        right: 7%;
-        height: 35px;
-        width: 60px;
-        border-radius: 25%;
+        top: 5%;
+        right: 40%;
+        height: 53px;
+        width: 94px;
+        border-radius: 14%;
         background-color: dodgerblue;
-    
+        font-size: 12px;
     }
 
     #copyButton{

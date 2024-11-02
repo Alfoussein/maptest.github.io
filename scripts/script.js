@@ -354,6 +354,7 @@ document.querySelector('#validateListButton').addEventListener('click', function
 
 fusionButton.addEventListener('click', () => { 
     copyButton.style.zIndex = "10" 
+    fusionButton.style.zIndex = "0" 
 })
 
 
@@ -628,13 +629,13 @@ copyButton.addEventListener('click', function() {
 
     addressListContainer.querySelectorAll('div').forEach(function(element) {
         console.log(element)
-        element.querySelectorAll('a').forEach((link, index) =>{
+        element.querySelectorAll('span a').forEach((link, index) =>{
 
-            let parentName = link.parentElement.nodeName.toLocaleLowerCase() 
-            console.log(parentName);
-            if (parentName == "li") 
-                allLinks += + index + " - " +link.textContent + link.href+ '\n'
-            else
+            // let parentName = link.parentElement.nodeName.toLocaleLowerCase() 
+            // console.log(parentName);
+            // if (parentName == "li") 
+            //     allLinks += + index + " - " +link.textContent + link.href+ '\n'
+            // else
                 allLinks += link.href+ '\n'
             
         })
@@ -654,16 +655,16 @@ copyButton.addEventListener('click', function() {
 let boolDisplayongFullScreenTAble = false;
 document.querySelector('thead').addEventListener('click', function(event) {
     
-    
-    if (window.innerWidth < 900 && !boolDisplayongFullScreenTAble ) {
-        document.querySelector('#addressTableContainer').animate([{ top: "65%" },{ top: '15%' } ],{duration: 1500, }) 
-        document.querySelector('#addressTableContainer').style.top = "15%";
-        boolDisplayongFullScreenTAble  = true
+    if (window.innerWidth < 900) {
+        if (window.innerWidth < 900 && !boolDisplayongFullScreenTAble ) {
+            document.querySelector('#addressTableContainer').animate([{ top: "65%" },{ top: '15%' } ],{duration: 1500, }) 
+            document.querySelector('#addressTableContainer').style.top = "15%";
+            boolDisplayongFullScreenTAble  = true
+        }
+        else{
+            document.querySelector('#addressTableContainer').animate([{ top: "15%" },{ top: '65%' } ],{duration: 1500, }) 
+            document.querySelector('#addressTableContainer').style.top = "65%";
+            boolDisplayongFullScreenTAble  = false
+        }
     }
-    else{
-        document.querySelector('#addressTableContainer').animate([{ top: "15%" },{ top: '65%' } ],{duration: 1500, }) 
-        document.querySelector('#addressTableContainer').style.top = "65%";
-        boolDisplayongFullScreenTAble  = false
-    }
-    
 })
