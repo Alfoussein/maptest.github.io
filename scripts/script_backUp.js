@@ -633,14 +633,14 @@ copyButton.addEventListener('click', function() {
             let parentName = link.parentElement.nodeName.toLocaleLowerCase() 
             console.log(parentName);
             if (parentName == "li") 
-                allLinks += + index + " - " +link.textContent + link.href+ '\n'
+                allLinks += index + " - " +link.textContent + link.href+ '\n'
             else
                 allLinks += link.href+ '\n'
             
         })
        // allLinks += link.href + '\n';
     });
-
+ 
     navigator.clipboard.writeText(allLinks).then(function() {
         alert('All links copied to clipboard');
     }).catch(function(err) {

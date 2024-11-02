@@ -629,14 +629,14 @@ copyButton.addEventListener('click', function() {
 
     addressListContainer.querySelectorAll('div').forEach(function(element) {
         console.log(element)
-        element.querySelectorAll('span a').forEach((link, index) =>{
+        element.querySelectorAll('a').forEach((link, index) =>{
 
-            // let parentName = link.parentElement.nodeName.toLocaleLowerCase() 
-            // console.log(parentName);
-            // if (parentName == "li") 
-            //     allLinks += + index + " - " +link.textContent + link.href+ '\n'
-            // else
-                allLinks += link.href+ '\n'
+            let parentName = link.parentElement.nodeName.toLocaleLowerCase() 
+            console.log(parentName);
+            if (parentName == "li") 
+                allLinks += + index + " - " +link.textContent  + '\n';
+           else
+                allLinks += link.href+ '\n';
             
         })
        // allLinks += link.href + '\n';
