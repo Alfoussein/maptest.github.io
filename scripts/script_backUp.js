@@ -143,6 +143,8 @@ function addMarkerToMap(address, name, coordinates) {
         return;
     } 
 
+    if (selectedAddresses.length > 0) validateButton.style.zIndex = 2;
+
     // Création du marqueur et ajout à la carte
     let marker = L.marker([coordinates.lat, coordinates.lng]).addTo(map);
     marker.bindPopup(`<b>${address} \n ${name}</b>`).openPopup();

@@ -56,11 +56,14 @@ function getCoordinates(address) {
 function attachMarkerClickEvent(marker, addrress, name, action) {
 
     marker.on('click', function() {
+
+
         // Vérifie si le marqueur a déjà été sélectionné
         if (marker.isSelected) {
             alert("Ce marqueur a déjà été sélectionné.");
             return; // Ne rien faire si le marqueur est déjà sélectionné
         }
+
         
         console.log("attachMarkerClickEvent --- marker.on")
         //Find 
@@ -94,6 +97,9 @@ function attachMarkerClickEvent(marker, addrress, name, action) {
             iconAnchor: [12, 41],
             popupAnchor: [1, -34],
         }));
+
+        if(selectedAddresses.length <= 0)validateButton.style.zIndex = 0;
+        else validateButton.style.zIndex = 10;
 
         //document.querySelector('#undoGroupSelectedButton').disabled = false;
 
@@ -143,6 +149,7 @@ function addMarkerToMap(address, name, coordinates) {
         return;
     } 
 
+
     // Création du marqueur et ajout à la carte
     let marker = L.marker([coordinates.lat, coordinates.lng]).addTo(map);
     marker.bindPopup(`<b>${address} \n ${name}</b>`).openPopup();
@@ -187,16 +194,14 @@ async function undoGroupSelected() {
                         // Réinitialisation de la propriété isSelected
                         marker.isSelected = false; 
                         // selectedNamesValues = [];
-                        console.log(countPeople = countPeople - 1)
                         attachMarkerClickEvent(marker, address, name, "undo")
                         
                     // }
                 });
         });
 
-        
+        countPeople = countPeople - lastGroupAddress.length ;
 
-        let tableBody = document.querySelector('#addressTable tbody');
         if (tableBody.lastChild) 
             tableBody.removeChild(tableBody.lastChild);
 
@@ -205,7 +210,7 @@ async function undoGroupSelected() {
 
         // Gestion de l'activation/désactivation du bouton undo
         if (tableBody.children.length === 0) {
-            undoButton.style.display = "none";
+            undoButton.style.zIndex = 0;
             fusionButton.style.zIndex = 0;
             copyButton.style.zIndex = 0;
         }
@@ -219,32 +224,31 @@ function generateGoogleMapsUrl(platform) {
     let concatenatedAddresses = selectedAddresses.join('/');
     let fullUrl = urlBase + concatenatedAddresses;
 
-    // Create a new row for the table
-    let tableBody = document.querySelector('#addressTable tbody');
+
     let newRow = document.createElement('tr');
 
     // Add a numbered cell
     let rowNumber = tableBody.children.length + 1; // Calculate the row number
 
     // Create the list items directly
-    let liElements = '';
+    let spanElements = '';
     selectedNamesValues.forEach(function(name, index) {
-        liElements += `<li><a href="${urlBase +selectedAddresses[index]}">${countPeople} - ${name}</a></li>`;
+        spanElements += `<span><a href="${urlBase +selectedAddresses[index]}">${countPeople} - ${name}</a></span> </br> </br>`;
         countPeople++;
     });
 
     
     let numberCell = `<td>${rowNumber}</td>`;
-    let listCell = `<td>${liElements}</td>`; // Directly add list items
+    let spanstCell = `<td>${spanElements}</td>`; // Directly add spanst items
     let urlCell = `<td><a href="${fullUrl}" target="_blank">${fullUrl}</a></td>`;
     console.log()
     // Create table cells
     if (platform == "other"){
-        newRow.innerHTML = numberCell + listCell + urlCell;
+        newRow.innerHTML = numberCell + spanstCell + urlCell;
     }else if (platform == "TSF"){
-        newRow.innerHTML = listCell;
+        newRow.innerHTML = spanstCell;
     }else
-        newRow.innerHTML = numberCell + listCell + urlCell;   
+        newRow.innerHTML = numberCell + spanstCell + urlCell;   
     
     // Construct the row with the first cell, list items cell, and URL cell
     // Append the new row to the table body
@@ -255,6 +259,14 @@ function generateGoogleMapsUrl(platform) {
 
 let fusionButton = document.querySelector('#fusion');
 let undoButton = document.querySelector('#undoGroupSelectedButton');
+let validateButton = document.querySelector('#validateListButton');
+let addressTableContainer= document.querySelector('#addressTableContainer'); 
+let addressListContainer = document.querySelector('#addressListContainer')
+let copyButton = document.querySelector('#copyButton');
+let tableBody = document.querySelector('#addressTable tbody');
+
+
+
 undoButton.addEventListener('click', undoGroupSelected);
 
 document.querySelector('#csvFileInput').addEventListener('change', function(event) {
@@ -308,6 +320,7 @@ document.querySelector('#imageFileInput').addEventListener('change', function(ev
             });
         });
 
+        deleteTheadChilds();
         // Une fois que toutes les promesses sont résolues, traiter le texte combiné
         Promise.all(promises).then(() => {
             processRecognizedText(combinedText); // Appel à la fonction pour traiter le texte reconnu
@@ -324,7 +337,7 @@ function restartApplication() {
 
 }
 
-document.querySelector('#validateListButton').addEventListener('click', function() {
+validateButton.addEventListener('click', function() {
     // Vérifiez si des adresses sont sélectionnées
     if (selectedAddresses.length === 0) {
         alert("Aucune adresse sélectionnée pour valider.");
@@ -346,9 +359,10 @@ document.querySelector('#validateListButton').addEventListener('click', function
         map.removeLayer(marker); // Supprime les marqueurs de la carte
     });
     markers = []; // Réinitialise la liste des marqueurs
-    undoButton.style.display = "block";
+    undoButton.style.zIndex = 1;
 
     fusionButton.style.zIndex = "10";
+    validateButton.style.zIndex = 0;
 
 });
 
@@ -361,16 +375,12 @@ fusionButton.addEventListener('click', () => {
 
 function deleteTheadChilds(){
 
-    let addressTableContainer= document.querySelector('#addressTableContainer');  
+ 
     let trInThead =  addressTableContainer.children[0].children[0].children[0];
     trInThead.removeChild(trInThead.firstElementChild);
     trInThead.removeChild(trInThead.lastElementChild);
 
 }
-
-
-
-
 
 
 // Fonction pour traiter le texte reconnu
@@ -379,7 +389,7 @@ async function processRecognizedText(recognizedText) {
     const lines = recognizedText.split('\n');
     console.log(lines);
 
-   deleteTheadChilds();
+
 
     //console.log(trInThead.removeChild(trInThead.lastChild))
     //Sort name  first methode
@@ -470,27 +480,39 @@ function mergeArrayOCR(selectedPreviousElements){
 function displayanimation(){
 
     if (window.innerWidth < 900) {
-        document.querySelector('#addressTableContainer').animate(
+        addressTableContainer.animate(
             [{ top: "100%" },{ top: '65%' } ],{
                 // sync options
                 duration: 1500,
                 // iterations: Infinity
-            })
+        })
 
-        document.querySelector('#validateListButton').animate(
+        validateButton.animate(
             [{ bottom: "0%" },{ bottom: '35%' } ],{
                 // sync options
                 duration: 1500,
                 // iterations: Infinity
-            })  
-            document.querySelector('#undoGroupSelectedButton').animate(
-                [{ bottom: "0%" },{ bottom: '35%' } ],{
-                    // sync options
-                    duration: 1500,
-                    // iterations: Infinity
-                })    
+        })  
+        undoButton.animate(
+            [{ bottom: "0%" },{ bottom: '35%' } ],{
+                // sync options
+                duration: 1500,
+                // iterations: Infinity
+        })   
+        fusionButton.animate(
+            [{ background: "#9ca59c" },{ background: "#5b5e5b" } ],{
+                // sync options
+                duration: 2000,
+                iterations: Infinity
+        })  
+        copyButtonButton.animate(
+            [{ background: "#9ca59c" },{ background: "#5b5e5b" } ],{
+                // sync options
+                duration: 2000,
+                iterations: Infinity
+        })  
     }else{
-        document.querySelector('#addressTableContainer').animate(
+        addressTableContainer.animate(
             [{ top: "100%" },{ top: '0%' } ],{
                 // sync options
                 duration: 1500,
@@ -556,7 +578,7 @@ fusionButton.addEventListener('click', function(event) {
     generateListInHtml(allAddrresesArray, allNamesArray)
 }); 
 
-let addressListContainer = document.querySelector('#addressListContainer')
+
 
 function generateListInHtml(allAddrresesArray, allNamesArray){
 
@@ -564,9 +586,9 @@ function generateListInHtml(allAddrresesArray, allNamesArray){
 
 
     while(allAddrresesArray.length >= 8){
+
         let newLDivElement = document.createElement('div');
         let newSpanElement = document.createElement('span');
-        let newListElement = document.createElement('li');
         let addrressesSelected = allAddrresesArray.splice(0, 8);
         let namesSelected = allNamesArray.splice(0, 8);
         let concatenatedAddresses = addrressesSelected.join('/');
@@ -574,18 +596,20 @@ function generateListInHtml(allAddrresesArray, allNamesArray){
         let linkElements = `<a href="${fullUrl}">${fullUrl}</a>`
         let listElements;
         
-        namesSelected.forEach(element => {
-            listElements += `<a href="${fullUrl}">${element}</a>`;
+        namesSelected.forEach((element, index) => {
+            let newListElement = document.createElement('li');
+            listElements = `<a href="${allAddrresesArray[index]}">${element}</a>`;
+            newListElement.innerHTML = listElements;
+            newLDivElement.appendChild(newListElement);
+   
 
         });
         console.log(fullUrl)
 
         newSpanElement.innerHTML = linkElements;
-        newListElement.innerHTML = listElements;
-
 
         newLDivElement.appendChild(newSpanElement);
-        newLDivElement.appendChild(newListElement);
+
         addressListContainer.appendChild(newLDivElement);
     }
 
@@ -619,10 +643,13 @@ function generateListInHtml(allAddrresesArray, allNamesArray){
 
 }
 
-let copyButton = document.querySelector('#copyButton');
+
 
 
 copyButton.addEventListener('click', function() {
+
+    copyButton.style.zIndex = 0;
+    let countElementInContainer = 1;
 
     window.getSelection().removeAllRanges();
     let allLinks = '';
@@ -633,13 +660,16 @@ copyButton.addEventListener('click', function() {
 
             let parentName = link.parentElement.nodeName.toLocaleLowerCase() 
             console.log(parentName);
-            if (parentName == "li") 
-                allLinks += + index + " - " +link.textContent  + '\n';
-           else
-                allLinks += link.href+ '\n';
+
+            if (parentName == "li") {
+                allLinks += + countElementInContainer + " - " +link.textContent  + '\n';
+                countElementInContainer++;
+            }
+            else
+                allLinks += link.href+ '\n \n';
+            
             
         })
-       // allLinks += link.href + '\n';
     });
 
     navigator.clipboard.writeText(allLinks).then(function() {
