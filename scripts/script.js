@@ -116,7 +116,7 @@ function attachMarkerClickEvent(marker, addrress, name, action) {
                 selectedNamesStorage.push([...selectedNamesValues]);
                 selectedAddresses = [];
                 selectedNamesValues = [];
-                console.log("ici")
+                fusionButton.style.zIndex = "10";
             } else {
                 markers.forEach(marker => {
                     marker.setIcon(L.icon({
