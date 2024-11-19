@@ -150,6 +150,10 @@ function addMarkerToMap(address, name, coordinates) {
     } 
 
 
+    undoButton.style.zIndex = "0";
+    fusionButton.style.zIndex = "0";
+    copyButton.style.zIndex = "0";
+
     // Création du marqueur et ajout à la carte
     let marker = L.marker([coordinates.lat, coordinates.lng]).addTo(map);
     marker.bindPopup(`<b>${address} \n ${name}</b>`).openPopup();
@@ -644,8 +648,6 @@ function generateListInHtml(allAddrresesArray, allNamesArray){
 }
 
 
-
-
 copyButton.addEventListener('click', function() {
 
     copyButton.style.zIndex = 0;
@@ -674,6 +676,7 @@ copyButton.addEventListener('click', function() {
 
     navigator.clipboard.writeText(allLinks).then(function() {
         alert('All links copied to clipboard');
+        copyButton.style.zIndex = "0";
     }).catch(function(err) {
         console.error('Unable to copy', err);
     });

@@ -121,16 +121,18 @@ input[type="file"]:focus {
 
 
 #validateListButton{
-    position: fixed;
-    bottom: 10px;
-    z-index: 0;
-    left: 20%;
+    position: fixed; bottom: 21%; z-index: 0; left: 1%;
 }
 
 
 
 #undoGroupSelectedButton {
-    right: 10px;
+    z-index: 1;
+    position: fixed;
+    bottom: 21%;
+    z-index: 1;
+    left: 1%;
+    bottom:18%;
 }
 
 #addressTable  {
@@ -171,12 +173,12 @@ li {
 #fusion{
     position: fixed;
     z-index: 0;
-    height: 10%;
-    width: 100%;
+    height: 8%;
+    width: 65%;
     border-radius: 0%;
     background-color: #5b5e5b;
     border: 5px solid white;
-    font-size: 12px;
+    font-size: 22px;
     bottom: 0%;
     color: white;
 }
@@ -186,8 +188,11 @@ li {
     position: fixed;
     z-index: 0;
     bottom: 0%;
-    height: 40px;
-    width: 110px;
+    height: 8%;
+    width: 65%;
+    border-radius: 0%;
+    background-color: #5b5e5b;
+    border: 5px solid white;
     color: white;
 }
 
@@ -243,6 +248,7 @@ li {
         z-index: 0;
         width: 31%;
         font-size: medium;
+        
     }
 
     #addressTable {
