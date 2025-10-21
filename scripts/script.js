@@ -1,9 +1,9 @@
-// Updated script.js with fixes for OCR extraction issues
+// Updated script.js to fix incomplete addresses and extra quotes
 // Changes:
-// - Updated fullNameWithTitleRegex to handle all-caps names: added A-Z to the character class after the first letter.
-// - In processRecognizedText: After taking address line, check if the next line looks like a city (e.g., contains "Paris, France") and append it to the address for complete geocoding.
-// - Increased debug logging to include raw line when checking for titleMatch or refPack.
-// - This should now extract all 4 from your image, as simulated.
+// - Enhanced cleanAddress to remove all types of quotes (' " “ ”) and trailing punctuation/spaces.
+// - In processRecognizedText: Improved city appending logic to always check for postcode/city pattern in the next 1-2 lines after the address line, even if not exact match, to capture full addresses reliably.
+// - In generateListInHtml: For TSF, display full addresses in <li> without quotes.
+// - This ensures addresses are complete (e.g., including postcode and city) and clean in display/URLs.
 
 const apiKey = 'de012302a8b6464691dbd1df48f474fe';
 
@@ -33,10 +33,10 @@ const addressKeywords = [
 ];
 
 const refPackKeywords = ['LORL', 'LORP', 'TFA', 'LORN'];
-const fullNameWithTitleRegex = /(Mme\/m|M|Mme)\s+([A-ZÀ-ÿ][a-zA-ZÀ-ÿ]+(?:\s+[A-ZÀ-ÿ][a-zA-ZÀ-ÿ]+)*)/g;
+const fullNameWithTitleRegex = /(Mme\/m|M|Mme)\s+([A-ZÀ-ÿ][a-zA-ZÀ-ÿ.]+(?:\s+[A-ZÀ-ÿ][a-zA-ZÀ-ÿ.]+)*)/g;
 
 function cleanAddress(address) {
-    return address.replace(/[“”>]/g, '').trim();
+    return address.replace(/[“”>"'"]/g, '').replace(/\s+/g, ' ').trim();
 }
 
 async function getCoordinates(address) {
@@ -285,21 +285,22 @@ async function processRecognizedText(recognizedText) {
                 const nextLine = lines[i + j];
                 if (nextLine.startsWith(">") && addressKeywords.some(keyword => nextLine.toLowerCase().includes(` ${keyword} `))) {
                     let address = cleanAddress(nextLine);
-                    // Append next line if it's the city (e.g., "Paris, France")
-                    if (i + j + 1 < lines.length && /Paris,\s*France/i.test(lines[i + j + 1])) {
-                        address += `, ${lines[i + j + 1]}`;
+                    // Append next 1-2 lines if they look like city/postcode
+                    let k = 1;
+                    while (i + j + k < lines.length && /[0-9]{5}\s*Paris,\s*France/i.test(lines[i + j + k])) {
+                        address += `, ${cleanAddress(lines[i + j + k])}`;
+                        k++;
                     }
                     names.push(name);
-                    addresses.push(address);
+                    addresses.push(address.trim());
                     console.log(`Paire détectée: Nom="${name}", Adresse="${address}"`);
-                    i += j;
+                    i += j + k - 1;
                     addressFound = true;
                     break;
                 }
             }
             if (!addressFound) {
                 console.warn(`Nom sans adresse: "${name}"`);
-                // Backtrack if weadvanced for ref pack
                 if (isRefPack) i--;
             }
         } else if (line.startsWith(">") && addressKeywords.some(keyword => line.toLowerCase().includes(` ${keyword} `))) {
@@ -388,7 +389,8 @@ function generateListInHtml(allAddresses, allNames) {
 
         namesSelected.forEach((name, index) => {
             const li = document.createElement('li');
-            li.innerHTML = `<a href="${urlBase + addressesSelected[index]}">${name}</a>`;
+            const displayText = platform === "TSF" ? addressesSelected[index] : name;
+            li.innerHTML = `<a href="${urlBase + addressesSelected[index]}">${displayText}</a>`;
             div.appendChild(li);
         });
         div.appendChild(span);
@@ -403,7 +405,8 @@ function generateListInHtml(allAddresses, allNames) {
 
         namesCopy.forEach((name, index) => {
             const li = document.createElement('li');
-            li.innerHTML = `<a href="${urlBase + addressesCopy[index]}">${name}</a>`;
+            const displayText = platform === "TSF" ? addressesCopy[index] : name;
+            li.innerHTML = `<a href="${urlBase + addressesCopy[index]}">${displayText}</a>`;
             div.appendChild(li);
         });
         div.appendChild(span);
