@@ -1,9 +1,7 @@
-// Updated script.js to fix incomplete addresses and extra quotes
+// Updated script.js to include names in the fused/copied list for TSF mode
 // Changes:
-// - Enhanced cleanAddress to remove all types of quotes (' " “ ”) and trailing punctuation/spaces.
-// - In processRecognizedText: Improved city appending logic to always check for postcode/city pattern in the next 1-2 lines after the address line, even if not exact match, to capture full addresses reliably.
-// - In generateListInHtml: For TSF, display full addresses in <li> without quotes.
-// - This ensures addresses are complete (e.g., including postcode and city) and clean in display/URLs.
+// - In generateListInHtml: For TSF, now display "Name - Address" in <li> to show both as requested.
+// - This adds the list of names in addition to the URLs/addresses.
 
 const apiKey = 'de012302a8b6464691dbd1df48f474fe';
 
@@ -141,9 +139,10 @@ function generateGoogleMapsUrl() {
 
     let spanElements = '';
     if (platform === "TSF") {
-        // Show addresses instead of names for TSF mode
+        // Show names and addresses for TSF mode
         selectedAddresses.forEach((address, index) => {
-            spanElements += `<span><a href="${urlBase + address}">${countPeople} - ${address}</a></span><br><br>`;
+            const name = selectedNamesValues[index];
+            spanElements += `<span><a href="${urlBase + address}">${countPeople} - ${name} - ${address}</a></span><br><br>`;
             countPeople++;
         });
     } else {
@@ -389,7 +388,7 @@ function generateListInHtml(allAddresses, allNames) {
 
         namesSelected.forEach((name, index) => {
             const li = document.createElement('li');
-            const displayText = platform === "TSF" ? addressesSelected[index] : name;
+            const displayText = platform === "TSF" ? `${name} - ${addressesSelected[index]}` : name;
             li.innerHTML = `<a href="${urlBase + addressesSelected[index]}">${displayText}</a>`;
             div.appendChild(li);
         });
@@ -405,7 +404,7 @@ function generateListInHtml(allAddresses, allNames) {
 
         namesCopy.forEach((name, index) => {
             const li = document.createElement('li');
-            const displayText = platform === "TSF" ? addressesCopy[index] : name;
+            const displayText = platform === "TSF" ? `${name} - ${addressesCopy[index]}` : name;
             li.innerHTML = `<a href="${urlBase + addressesCopy[index]}">${displayText}</a>`;
             div.appendChild(li);
         });
