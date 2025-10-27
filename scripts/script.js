@@ -1,7 +1,7 @@
-// Updated script.js to include names in the fused/copied list for TSF mode
+// Updated script.js to truncate addresses in the display for fused/copied list
 // Changes:
-// - In generateListInHtml: For TSF, now display "Name - Address" in <li> to show both as requested.
-// - This adds the list of names in addition to the URLs/addresses.
+// - In generateListInHtml: For TSF, truncate address to 25 chars + "..." if longer, to shorten display as requested.
+// - Full address still used in URLs.
 
 const apiKey = 'de012302a8b6464691dbd1df48f474fe';
 
@@ -388,7 +388,11 @@ function generateListInHtml(allAddresses, allNames) {
 
         namesSelected.forEach((name, index) => {
             const li = document.createElement('li');
-            const displayText = platform === "TSF" ? `${name} - ${addressesSelected[index]}` : name;
+            let displayAddress = addressesSelected[index];
+            if (displayAddress.length > 25) {
+                displayAddress = displayAddress.slice(0, 25) + '...';
+            }
+            const displayText = platform === "TSF" ? `${name} - ${displayAddress}` : name;
             li.innerHTML = `<a href="${urlBase + addressesSelected[index]}">${displayText}</a>`;
             div.appendChild(li);
         });
@@ -404,7 +408,11 @@ function generateListInHtml(allAddresses, allNames) {
 
         namesCopy.forEach((name, index) => {
             const li = document.createElement('li');
-            const displayText = platform === "TSF" ? `${name} - ${addressesCopy[index]}` : name;
+            let displayAddress = addressesCopy[index];
+            if (displayAddress.length > 25) {
+                displayAddress = displayAddress.slice(0, 25) + '...';
+            }
+            const displayText = platform === "TSF" ? `${name} - ${displayAddress}` : name;
             li.innerHTML = `<a href="${urlBase + addressesCopy[index]}">${displayText}</a>`;
             div.appendChild(li);
         });
