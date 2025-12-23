@@ -117,6 +117,8 @@ function attachMarkerClickEvent(marker, addrress, name, action) {
                 selectedAddresses = [];
                 selectedNamesValues = [];
                 fusionButton.style.zIndex = "10";
+                undoButton.style.zIndex = "10";
+
             } else {
                 markers.forEach(marker => {
                     marker.setIcon(L.icon({
@@ -366,7 +368,8 @@ validateButton.addEventListener('click', function() {
     undoButton.style.zIndex = 1;
 
     fusionButton.style.zIndex = "10";
-    validateButton.style.zIndex = 0;
+    undoButton.style.zIndex = "10";
+    validateButton.style.zIndex = "0";
 
 });
 
