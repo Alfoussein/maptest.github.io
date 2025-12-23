@@ -132,7 +132,11 @@ input[type="file"]:focus {
     bottom: 21%;
     z-index: 1;
     left: 1%;
+<<<<<<< HEAD
     bottom:10%;
+=======
+    bottom:11%;
+>>>>>>> a4eb5d89168d9ccd2c37fde136f57d1a1b553490
 }
 
 #addressTable  {

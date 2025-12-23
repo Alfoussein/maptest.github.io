@@ -2,8 +2,58 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+<<<<<<< HEAD
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Route Builder Pro - OCR & Mapping</title>
+=======
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaflet avec fonction Undo et OCR</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="./styles/style.css">
+</head>
+<body>
+    <header>
+        <nav id="menuContainer">
+            <button id="tsfButton" aria-label="TSF">TSF</button>
+            <button id="otherButton" aria-label="Other">Other</button>
+        </nav>
+    </header>
+
+    <main>
+        <section id="fileInputs">
+            <label for="csvFileInput">Sélectionner un fichier CSV:</label>
+            <input type="file" id="csvFileInput" accept=".csv" />
+            
+            <label for="imageFileInput">Sélectionner des images:</label>
+            <input type="file" id="imageFileInput" accept="image/*" multiple />
+        </section>
+        
+        <section id="mapContainer">
+            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="25" height="25" viewBox="0 0 50 50" id="restartButton"> <path d="M 25 2 A 2.0002 2.0002 0 1 0 25 6 C 35.517124 6 44 14.482876 44 25 C 44 35.517124 35.517124 44 25 44 C 14.482876 44 6 35.517124 6 25 C 6 19.524201 8.3080175 14.608106 12 11.144531 L 12 15 A 2.0002 2.0002 0 1 0 16 15 L 16 4 L 5 4 A 2.0002 2.0002 0 1 0 5 8 L 9.5253906 8 C 4.9067015 12.20948 2 18.272325 2 25 C 2 37.678876 12.321124 48 25 48 C 37.678876 48 48 37.678876 48 25 C 48 12.321124 37.678876 2 25 2 z"></path> </svg>
+            <div id="map"></div>
+            <button id="undoGroupSelectedButton" aria-label="Annuler la sélection" >Annuler la derniere selection</button>
+            <button id="validateListButton" aria-label="Valider la Liste">Valider la liste en cour</button>
+        </section>
+        
+        <section id="addressTableContainer">
+            <table id="addressTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Adresse</th>
+                        <th>URL Google Maps</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows will be added here dynamically -->
+                </tbody>
+            </table>
+        </section>
+
+
+    </main>
+
+>>>>>>> a4eb5d89168d9ccd2c37fde136f57d1a1b553490
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
