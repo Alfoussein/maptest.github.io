@@ -671,11 +671,25 @@
 
         // Marqueur avec selection/deselection (logique Cainiao)
         async function createMarker(addr, name, trackingNum = '') {
-            // DOUBLONS: Verifier si trackingNum existe deja
-            if (trackingNum) {
-                const existing = allMarkers.find(m => m.custom.trackingNum === trackingNum);
+            // DOUBLONS: Verifier si trackingNum existe deja (normalise)
+            const trackNorm = (trackingNum || '').trim().toUpperCase();
+            if (trackNorm) {
+                const existing = allMarkers.find(m => (m.custom.trackingNum || '').trim().toUpperCase() === trackNorm);
                 if (existing) {
-                    console.log(`DOUBLON REFUSE: ${trackingNum} existe deja`);
+                    console.log(`DOUBLON REFUSE (Tracking): ${trackNorm} existe deja`);
+                    return null;
+                }
+            } else {
+                // Si pas de tracking, verifier si NOM + ADRESSE identique existe deja
+                // Cela evite de creer des doublons si l'OCR a rate le tracking sur les deux
+                const nameNorm = name.trim().toLowerCase();
+                const addrNorm = addr.trim().toLowerCase();
+                const existing = allMarkers.find(m =>
+                    m.custom.name.trim().toLowerCase() === nameNorm &&
+                    m.custom.addr.trim().toLowerCase() === addrNorm
+                );
+                if (existing) {
+                    console.log(`DOUBLON REFUSE (Nom+Addr): ${name} a ${addr}`);
                     return null;
                 }
             }
@@ -688,7 +702,8 @@
             // Pour l'instant on ajoute directement comme demande.
 
             // Si coordonnees identiques exactes, on ajoute un mini jitter pour clicker
-            const jitter = 0.0001 * (Math.random() - 0.5);
+            // Si coordonnees identiques exactes, on ajoute un mini jitter pour clicker
+            const jitter = 0.0006 * (Math.random() - 0.5); // Decalage plus grand (env 50m)
             const finalPos = [pos.lat + jitter, pos.lng + jitter];
 
             const m = L.marker(finalPos, {
@@ -726,17 +741,31 @@
                         activeMarkers.splice(idx, 1);
                     }
                     // Renumber remaining
+                    // Recalculer la numerotation
+                    let maxVal = 0;
+                    validatedMarkers.flat().forEach(m => {
+                        const n = (typeof m.custom.globalNum === 'number') ? m.custom.globalNum : 0;
+                        if (n > maxVal) maxVal = n;
+                    });
+
                     activeMarkers.forEach((marker, i) => {
                         const markerEl = marker.getElement();
                         const mi = markerEl ? markerEl.querySelector('.m-inner') : null;
-                        if (mi) mi.textContent = i + 1;
+
+                        const newNum = maxVal + 1 + i;
+                        marker.custom.globalNum = newNum;
+                        if (mi) mi.textContent = newNum;
                     });
+
+                    globalMarkerCount = maxVal + activeMarkers.length;
+
                     updateUI();
                     return;
                 }
 
                 // SELECT
-                if (selectedAddresses.length >= 8) return alert("Max 8 adresses");
+                // if (selectedAddresses.length >= 8) return alert("Max 8 adresses");
+
                 m.custom.sel = true;
                 globalMarkerCount++;
                 m.custom.globalNum = globalMarkerCount;
@@ -1028,39 +1057,51 @@
 
         // Validation
         dom.validate.onclick = () => {
-            const group = selectedAddresses.map((a, i) => ({ addr: a, name: selectedNamesValues[i] }));
-            selectedGroups.push(group);
+            if (activeMarkers.length === 0) return;
 
-            let startPoint = detectedZip && detectedCity ? `${detectedZip} ${detectedCity}, France` : "paris, france";
-            const url = `https://www.google.fr/maps/dir/${encodeURIComponent(startPoint)}/` + group.map(p => encodeURIComponent(p.addr)).join('/');
+            // DECOUPAGE EN LOTS DE 8
+            const chunkSize = 8;
+            for (let i = 0; i < activeMarkers.length; i += chunkSize) {
+                const chunkMarkers = activeMarkers.slice(i, i + chunkSize);
+                const chunkGroup = chunkMarkers.map(m => ({ addr: m.custom.addr, name: m.custom.name }));
 
-            const tr = document.createElement('tr');
-            let html = `<td>${selectedGroups.length}</td><td>`;
-            group.forEach(p => { html += `<div style="margin-bottom:8px;"><b>${countPeople}. ${p.name}</b><br><span style="color:#888; font-size:11px;">${p.addr.substring(0, 30)}...</span></div>`; countPeople++; });
-            html += `<a href="${url}" target="_blank">Itineraire Google Maps</a></td>`;
-            tr.innerHTML = html;
-            dom.tbody.appendChild(tr);
+                selectedGroups.push(chunkGroup);
 
-            // Passer les marqueurs en gris au lieu de les supprimer
-            const validatedGroup = [];
-            activeMarkers.forEach((m, i) => {
-                const el = m.getElement();
-                const inner = el ? el.querySelector('.m-inner') : null;
-                if (inner) {
-                    inner.classList.remove('red');
-                    inner.classList.add('grey');
-                }
-                m.custom.sel = false;
-                m.custom.validated = true; // Marquer comme valide
-                validatedGroup.push(m);
-            });
-            validatedMarkers.push(validatedGroup);
-            activeMarkers = []; selectedAddresses = []; selectedNamesValues = [];
+                let startPoint = detectedZip && detectedCity ? `${detectedZip} ${detectedCity}, France` : "paris, france";
+                const url = `https://www.google.fr/maps/dir/${encodeURIComponent(startPoint)}/` + chunkGroup.map(p => encodeURIComponent(p.addr)).join('/');
+
+                const tr = document.createElement('tr');
+                let html = `<td>${selectedGroups.length}</td><td>`;
+                chunkGroup.forEach(p => {
+                    const num = chunkMarkers.find(mark => mark.custom.addr === p.addr)?.custom.globalNum;
+                    html += `<div style="margin-bottom:8px;"><b>${num}. ${p.name}</b><br><span style="color:#888; font-size:11px;">${p.addr.substring(0, 30)}...</span></div>`;
+                });
+                html += `<a href="${url}" target="_blank">Itineraire Google Maps</a></td>`;
+                tr.innerHTML = html;
+                dom.tbody.appendChild(tr);
+
+                // Passer les marqueurs en gris
+                const validatedGroup = [];
+                chunkMarkers.forEach(m => {
+                    const el = m.getElement();
+                    const inner = el ? el.querySelector('.m-inner') : null;
+                    if (inner) {
+                        inner.classList.remove('red');
+                        inner.classList.add('grey');
+                    }
+                    m.custom.sel = false;
+                    m.custom.validated = true;
+                    m.custom.groupIdx = selectedGroups.length - 1; // Sauvegarde l'index du groupe
+                    validatedGroup.push(m);
+                });
+                validatedMarkers.push(validatedGroup);
+            }
+
             activeMarkers = []; selectedAddresses = []; selectedNamesValues = [];
             updateUI();
-            performAutoSave(); // Save after validation
 
             dom.undo.classList.remove('hidden'); dom.fusion.classList.remove('hidden');
+            performAutoSave(); // Save after validation
             toggleSheet(true);
         };
 
@@ -1121,6 +1162,16 @@
                 dom.copy.classList.add('hidden');
                 dom.listContainer.innerHTML = '';
             }
+
+            // RECALCULER globalMarkerCount
+            // On cherche le plus grand globalNum parmi les groupes validés restants
+            let maxNum = 0;
+            validatedMarkers.flat().forEach(m => {
+                const n = m.custom.globalNum || 0;
+                if (n > maxNum) maxNum = n;
+            });
+            globalMarkerCount = maxNum;
+
             toggleSheet(false);
             performAutoSave(); // Save after undo
         };
@@ -1389,7 +1440,8 @@
                         return;
                     }
 
-                    if (selectedAddresses.length >= 8) return alert("Max 8 adresses");
+                    // if (selectedAddresses.length >= 8) return alert("Max 8 adresses");
+
                     m.custom.sel = true;
                     globalMarkerCount++;
                     m.custom.globalNum = globalMarkerCount;
