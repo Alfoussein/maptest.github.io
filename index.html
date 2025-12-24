@@ -272,6 +272,11 @@
             background: #ef4444;
         }
 
+        .m-inner.grey {
+            background: #666;
+            opacity: 0.7;
+        }
+
         /* Selection List */
         .selection-list {
             display: flex;
@@ -389,6 +394,7 @@
 
         const geocodeCache = new Map();
         let selectedAddresses = [], selectedNamesValues = [], activeMarkers = [], selectedGroups = [];
+        let validatedMarkers = []; // Marqueurs valides en gris
         let platform = null, countPeople = 1;
         let detectedZip = "", detectedCity = "";
 
@@ -458,7 +464,7 @@
             }).addTo(map);
 
             m.bindPopup(`<b>${name}</b><br>${addr}`);
-            m.custom = { addr, name, pos, sel: false };
+            m.custom = { addr, name, pos, sel: false, validated: false };
 
             // Helper to get inner element safely
             const getInner = () => {
@@ -467,10 +473,10 @@
             };
 
             m.on('click', () => {
+                // Ignorer les marqueurs valides (gris)
+                if (m.custom.validated) return;
+
                 const inner = getInner();
-                console.log(">>> CLICK MARKER:", addr);
-                console.log(">>> Element:", m.getElement());
-                console.log(">>> Inner:", inner);
 
                 if (m.custom.sel) {
                     // DESELECT
@@ -756,7 +762,20 @@
             tr.innerHTML = html;
             dom.tbody.appendChild(tr);
 
-            activeMarkers.forEach(m => map.removeLayer(m));
+            // Passer les marqueurs en gris au lieu de les supprimer
+            const validatedGroup = [];
+            activeMarkers.forEach((m, i) => {
+                const el = m.getElement();
+                const inner = el ? el.querySelector('.m-inner') : null;
+                if (inner) {
+                    inner.classList.remove('red');
+                    inner.classList.add('grey');
+                }
+                m.custom.sel = false;
+                m.custom.validated = true; // Marquer comme valide
+                validatedGroup.push(m);
+            });
+            validatedMarkers.push(validatedGroup);
             activeMarkers = []; selectedAddresses = []; selectedNamesValues = [];
             updateUI();
 
@@ -794,21 +813,31 @@
 
         dom.undo.onclick = async () => {
             if (!selectedGroups.length) return;
-            const lastGroup = selectedGroups.pop();
+            selectedGroups.pop();
             dom.tbody.removeChild(dom.tbody.lastChild);
-            for (const p of lastGroup) {
-                const m = await createMarker(p.addr, p.name);
-                if (m) {
-                    m.custom.sel = true;
-                    const inner = m.getElement?.querySelector?.('.m-inner');
-                    if (inner) { inner.classList.remove('green'); inner.classList.add('red'); }
-                    selectedAddresses.push(p.addr);
-                    selectedNamesValues.push(p.name);
-                    activeMarkers.push(m);
-                }
+
+            // Restaurer les marqueurs gris en vert
+            const lastValidated = validatedMarkers.pop();
+            if (lastValidated) {
+                lastValidated.forEach(m => {
+                    const el = m.getElement();
+                    const inner = el ? el.querySelector('.m-inner') : null;
+                    if (inner) {
+                        inner.classList.remove('grey');
+                        inner.classList.add('green');
+                        inner.textContent = '';
+                    }
+                    m.custom.validated = false;
+                });
             }
+
             updateUI();
-            if (!dom.tbody.children.length) { dom.undo.classList.add('hidden'); dom.fusion.classList.add('hidden'); dom.copy.classList.add('hidden'); dom.listContainer.innerHTML = ''; }
+            if (!dom.tbody.children.length) {
+                dom.undo.classList.add('hidden');
+                dom.fusion.classList.add('hidden');
+                dom.copy.classList.add('hidden');
+                dom.listContainer.innerHTML = '';
+            }
             toggleSheet(false);
         };
     </script>
