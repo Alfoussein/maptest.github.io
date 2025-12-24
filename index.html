@@ -120,7 +120,7 @@
         }
 
         .bottom-sheet.open {
-            transform: translateY(20%);
+            transform: translateY(25%);
         }
 
         .handle {
@@ -224,7 +224,184 @@
         }
 
         .action-bar.sheet-open {
-            bottom: calc(60% - 10%);
+            bottom: calc(75% - 80px);
+            /* Ajuste pour etre plus bas, plus proche du handle */
+        }
+
+        /* Search Modal */
+        .search-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .search-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 150;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .search-modal.active {
+            display: flex;
+        }
+
+        .search-header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .search-close {
+            background: #ef4444;
+            border: none;
+            color: white;
+            width: 50px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .search-results {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .search-result-item {
+            background: var(--surface);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+            cursor: pointer;
+        }
+
+        .search-result-item:hover {
+            background: #2a2a2a;
+        }
+
+        /* Save Icon */
+        .save-icon {
+            position: absolute;
+            top: 80px;
+            right: 70px;
+            z-index: 10;
+            background: var(--surface);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            font-size: 18px;
+        }
+
+        .save-icon.has-saves {
+            background: #22c55e;
+        }
+
+        .save-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 150;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .save-modal.active {
+            display: flex;
+        }
+
+        .save-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .save-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .save-item {
+            background: var(--surface);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .save-item-info {
+            flex: 1;
+        }
+
+        .save-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .save-item-actions button {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-restore {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-save-current {
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            width: 100%;
+            margin-top: 15px;
+            cursor: pointer;
+            font-weight: bold;
         }
 
         .btn-main {
@@ -352,6 +529,7 @@
             <button id="tsfButton">TSF (OCR)</button>
             <button id="otherButton">Other (CSV)</button>
             <button id="cainiaoButton">Cainiao</button>
+            <button id="addImgBtn" title="Ajouter des images" style="padding: 10px 15px; font-size: 18px;">+</button>
         </div>
     </header>
 
@@ -359,11 +537,18 @@
         <div id="map"></div>
         <div id="selectionBadge" class="badge">0 / 8</div>
         <div id="restartButton" class="control-icon">🔄</div>
+        <div id="saveButton" class="save-icon" title="Sauvegardes">💾</div>
         <input type="file" id="csvFileInput" accept=".csv" hidden />
         <input type="file" id="imageFileInput" accept="image/*" multiple hidden />
         <div id="bottomSheet" class="bottom-sheet">
             <div class="handle" id="sheetHandle">Ouvrir</div>
             <div class="sheet-header">
+                <button id="searchBtn" class="search-btn" title="Rechercher">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                    </svg>
+                </button>
                 <button id="undoBtn" class="btn-sub hidden">Annuler groupe</button>
                 <button id="fusionBtn" class="btn-sub hidden">Fusionner</button>
                 <button id="copyBtn" class="btn-sub hidden">Copier tout</button>
@@ -387,6 +572,26 @@
         <button id="validateBtn" class="btn-main disabled">Valider la selection (0/8)</button>
     </footer>
 
+    <!-- Search Modal -->
+    <div id="searchModal" class="search-modal">
+        <div class="search-header">
+            <input type="text" id="searchInput" class="search-input" placeholder="4 derniers chiffres du colis..."
+                maxlength="4">
+            <button id="searchClose" class="search-close">X</button>
+        </div>
+        <div id="searchResults" class="search-results"></div>
+    </div>
+
+    <!-- Save Modal -->
+    <div id="saveModal" class="save-modal">
+        <div class="save-header">
+            <h3 style="margin:0; color:white;">Sauvegardes</h3>
+            <button id="saveClose" class="search-close">X</button>
+        </div>
+        <div id="saveList" class="save-list"></div>
+        <button id="saveCurrentBtn" class="btn-save-current">Sauvegarder la session actuelle</button>
+    </div>
+
     <script>
         const apiKey = 'de012302a8b6464691dbd1df48f474fe';
         const map = L.map('map', { zoomControl: false }).setView([48.8566, 2.3522], 12);
@@ -395,8 +600,11 @@
         const geocodeCache = new Map();
         let selectedAddresses = [], selectedNamesValues = [], activeMarkers = [], selectedGroups = [];
         let validatedMarkers = []; // Marqueurs valides en gris
+        let allMarkers = []; // Tous les marqueurs pour la recherche
+        let globalMarkerCount = 0; // Compteur global pour la numerotation
         let platform = null, countPeople = 1;
         let detectedZip = "", detectedCity = "";
+        let isAppending = false; // Mode ajout d'images
 
         const addressKeywords = ['rue', 'avenue', 'boulevard', 'place', 'chemin', 'route', 'square', 'impasse', 'allee', 'quai', 'cite', 'cours', 'bd'];
         const refPackKeywords = ['LORL', 'LORP', 'TFA', 'LORN'];
@@ -431,10 +639,17 @@
             dom.modalTitle.textContent = mode === 'Cainiao' ? 'Analyse Cainiao' : 'Analyse TSF';
         }
 
-        dom.tsf.onclick = () => { setActiveMode('TSF'); dom.imgInput.click(); };
-        dom.cainiao.onclick = () => { setActiveMode('Cainiao'); dom.imgInput.click(); };
-        dom.other.onclick = () => { setActiveMode('CSV'); dom.csvInput.click(); };
-        document.getElementById('restartButton').onclick = () => window.location.reload();
+        dom.tsf.onclick = () => { isAppending = false; setActiveMode('TSF'); dom.imgInput.click(); };
+        dom.cainiao.onclick = () => { isAppending = false; setActiveMode('Cainiao'); dom.imgInput.click(); };
+        dom.other.onclick = () => { isAppending = false; setActiveMode('CSV'); dom.csvInput.click(); };
+        document.getElementById('addImgBtn').onclick = () => {
+            if (!platform) return alert("Selectionnez d'abord un mode (TSF/Cainiao)");
+            isAppending = true;
+            dom.imgInput.click();
+        };
+        document.getElementById('restartButton').onclick = () => {
+            if (confirm('Tout effacer ?')) window.location.reload();
+        };
         dom.imgInput.onchange = () => { dom.modal.style.display = 'flex'; };
 
         const toggleSheet = (open) => {
@@ -455,16 +670,33 @@
         }
 
         // Marqueur avec selection/deselection (logique Cainiao)
-        async function createMarker(addr, name) {
-            const pos = await getCoords(addr);
-            if (!pos) return;
+        async function createMarker(addr, name, trackingNum = '') {
+            // DOUBLONS: Verifier si trackingNum existe deja
+            if (trackingNum) {
+                const existing = allMarkers.find(m => m.custom.trackingNum === trackingNum);
+                if (existing) {
+                    console.log(`DOUBLON REFUSE: ${trackingNum} existe deja`);
+                    return null;
+                }
+            }
 
-            const m = L.marker([pos.lat, pos.lng], {
+            const pos = await getCoords(addr);
+            if (!pos) return null;
+
+            // DOUBLONS: Si meme adresse mais tracking different ou nom different -> AJOUTER (avec petit decalage eventuel)
+            // Leaflet ne bloque pas, mais on peut verifier si on veut un decalage visuel.
+            // Pour l'instant on ajoute directement comme demande.
+
+            // Si coordonnees identiques exactes, on ajoute un mini jitter pour clicker
+            const jitter = 0.0001 * (Math.random() - 0.5);
+            const finalPos = [pos.lat + jitter, pos.lng + jitter];
+
+            const m = L.marker(finalPos, {
                 icon: L.divIcon({ className: '', html: `<div class="m-inner green"></div>` })
             }).addTo(map);
 
-            m.bindPopup(`<b>${name}</b><br>${addr}`);
-            m.custom = { addr, name, pos, sel: false, validated: false };
+            m.bindPopup(`<b>${name}</b>${trackingNum ? '<br><span style="color:#888;">#' + trackingNum + '</span>' : ''}<br>${addr}`);
+            m.custom = { addr, name, pos: { lat: finalPos[0], lng: finalPos[1] }, sel: false, validated: false, trackingNum };
 
             // Helper to get inner element safely
             const getInner = () => {
@@ -506,19 +738,23 @@
                 // SELECT
                 if (selectedAddresses.length >= 8) return alert("Max 8 adresses");
                 m.custom.sel = true;
-                const selNum = selectedAddresses.length + 1;
+                globalMarkerCount++;
+                m.custom.globalNum = globalMarkerCount;
                 if (inner) {
                     inner.classList.remove('green');
                     inner.classList.add('red');
-                    inner.textContent = selNum;
+                    inner.textContent = globalMarkerCount;
                     inner.style.transform = "scale(1.2)";
                 }
                 selectedAddresses.push(addr);
                 selectedNamesValues.push(name);
                 activeMarkers.push(m);
                 updateUI();
+                performAutoSave(); // Save after select
             });
 
+            allMarkers.push(m); // Ajouter a la liste pour la recherche
+            performAutoSave(); // Save after create
             return m;
         }
 
@@ -528,6 +764,7 @@
             dom.validate.textContent = `Valider la selection (${n}/8)`;
             dom.validate.classList.toggle('disabled', n === 0);
             renderSelectionList();
+            performAutoSave(); // Save UI state
         }
 
         function renderSelectionList() {
@@ -542,12 +779,12 @@
                 listDiv.innerHTML = '<p style="color:#666; text-align:center;">Cliquez sur les marqueurs verts pour selectionner</p>';
                 return;
             }
-            listDiv.innerHTML = selectedAddresses.map((addr, i) => `
+            listDiv.innerHTML = activeMarkers.map((m, i) => `
                 <div class="selection-card">
-                    <div class="num">${i + 1}</div>
+                    <div class="num">${m.custom.globalNum || (i + 1)}</div>
                     <div class="info">
-                        <div class="name">${selectedNamesValues[i]}</div>
-                        <div class="addr">${addr}</div>
+                        <div class="name">${m.custom.name}${m.custom.trackingNum ? ' <span style="color:#666;">#' + m.custom.trackingNum + '</span>' : ''}</div>
+                        <div class="addr">${m.custom.addr}</div>
                     </div>
                 </div>
             `).join('');
@@ -560,6 +797,17 @@
             console.log(`========================================`);
 
             dom.modal.style.display = 'none';
+
+            // CLEANUP si pas en mode ajout
+            if (!isAppending) {
+                activeMarkers.forEach(m => map.removeLayer(m));
+                allMarkers.forEach(m => map.removeLayer(m));
+                allMarkers = []; activeMarkers = []; selectedAddresses = []; selectedNamesValues = [];
+                validatedMarkers = []; selectedGroups = [];
+                globalMarkerCount = 0;
+                dom.tbody.innerHTML = '';
+            }
+
             let foundCount = 0;
             detectedZip = ""; detectedCity = "";
 
@@ -678,8 +926,23 @@
                             if (numAtEnd) rawAddress = `${numAtEnd[2]} ${numAtEnd[1].trim()}`;
                             const fullAddress = `${rawAddress}, ${detectedZip} ${detectedCity}, France`;
 
-                            // Find name (bullet point or pattern)
+                            // Find name and tracking number
                             let name = "Client";
+                            let trackingNum = '';
+
+                            // Look for tracking number - Generic for Cainiao/Others
+                            // Scan lines around the address for long codes
+                            for (let j = -3; j <= 5 && (i + j) < lines.length && (i + j) >= 0; j++) {
+                                const candidate = lines[i + j];
+                                // Catch any long alphanumeric string (>8 chars) and take last 4
+                                const trackMatch = candidate.match(/\b[A-Z0-9]{8,}\b/i);
+                                if (trackMatch) {
+                                    trackingNum = trackMatch[0].slice(-4);
+                                    break;
+                                }
+                            }
+
+                            // Find name (bullet point or pattern)
                             for (let j = 1; j <= 5 && (i + j) < lines.length; j++) {
                                 const candidate = lines[i + j];
                                 if (candidate.startsWith('\u2022') || candidate.startsWith('&') || candidate.startsWith('*')) {
@@ -692,8 +955,8 @@
                                 }
                             }
 
-                            console.log(`>>> FOUND: "${fullAddress}" | Client: "${name}"`);
-                            await createMarker(fullAddress, name);
+                            console.log(`>>> FOUND: "${fullAddress}" | Client: "${name}" | Tracking: ${trackingNum}`);
+                            await createMarker(fullAddress, name, trackingNum);
                             foundCount++;
                         }
                     }
@@ -702,8 +965,22 @@
                 else {
                     for (let i = 0; i < lines.length; i++) {
                         let name = "";
+                        let trackingNum = '';
                         const isRef = refPackKeywords.some(k => lines[i].includes(k));
                         const match = lines[i].match(fullNameRegex);
+
+                        // Extract tracking number from ref line or context - Generic extraction
+                        // We look for any long string (>5 chars) containing numbers or uppercase letters
+                        // and take the LAST 4 characters.
+                        if (isRef || i === 0 || i === 1) {
+                            // Match alphanumeric strings of at least 6 chars (to avoid short words)
+                            const possibleCodes = lines[i].match(/\b[A-Z0-9]{6,}\b/g);
+                            if (possibleCodes) {
+                                // Take the one that looks most like a tracking code (longest or containing numbers)
+                                const bestCode = possibleCodes.reduce((a, b) => a.length >= b.length ? a : b);
+                                trackingNum = bestCode.slice(-4); // Always take last 4
+                            }
+                        }
 
                         if (isRef && lines[i + 1]) { name = lines[i + 1]; i++; }
                         else if (match) { name = match[0]; }
@@ -713,8 +990,8 @@
                                 const l = lines[i + j].toLowerCase();
                                 if (l.startsWith('>') || addressKeywords.some(k => l.includes(k))) {
                                     const clean = lines[i + j].replace(/[">]/g, '').trim();
-                                    console.log(`>>> FOUND: "${clean}" | Client: "${name}"`);
-                                    await createMarker(clean, name);
+                                    console.log(`>>> FOUND: "${clean}" | Client: "${name}" | Tracking: ${trackingNum}`);
+                                    await createMarker(clean, name, trackingNum);
                                     foundCount++;
                                     break;
                                 }
@@ -726,6 +1003,8 @@
 
             statusDiv.innerHTML = `${foundCount} adresse(s) trouvee(s)!`;
             setTimeout(() => { statusDiv.style.display = 'none'; }, 2000);
+
+            performAutoSave(); // Save after OCR completion
 
             const goal = parseInt(dom.expected.value);
             if (foundCount < goal) alert(`Correlation : ${foundCount}/${goal} trouvees.`);
@@ -777,7 +1056,9 @@
             });
             validatedMarkers.push(validatedGroup);
             activeMarkers = []; selectedAddresses = []; selectedNamesValues = [];
+            activeMarkers = []; selectedAddresses = []; selectedNamesValues = [];
             updateUI();
+            performAutoSave(); // Save after validation
 
             dom.undo.classList.remove('hidden'); dom.fusion.classList.remove('hidden');
             toggleSheet(true);
@@ -831,6 +1112,8 @@
                 });
             }
 
+
+
             updateUI();
             if (!dom.tbody.children.length) {
                 dom.undo.classList.add('hidden');
@@ -839,7 +1122,376 @@
                 dom.listContainer.innerHTML = '';
             }
             toggleSheet(false);
+            performAutoSave(); // Save after undo
         };
+
+        // --- RECHERCHE ---
+        const searchModal = document.getElementById('searchModal');
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchClose = document.getElementById('searchClose');
+
+        searchBtn.onclick = () => {
+            searchModal.classList.add('active');
+            searchInput.focus();
+            searchInput.value = '';
+            searchResults.innerHTML = '<p style="color:#666; text-align:center;">Entrez les 4 derniers chiffres</p>';
+        };
+
+        searchClose.onclick = () => {
+            searchModal.classList.remove('active');
+        };
+
+        searchInput.oninput = () => {
+            const query = searchInput.value.trim();
+            if (query.length < 1) {
+                searchResults.innerHTML = '<p style="color:#666; text-align:center;">Entrez les 4 derniers chiffres</p>';
+                return;
+            }
+
+            const results = allMarkers.filter(m => {
+                const name = m.custom.name.toLowerCase();
+                const track = (m.custom.trackingNum || '').toLowerCase();
+                // Recherche uniquement par NOM ou NUMERO DE COLIS
+                return name.includes(query) || track.includes(query);
+            });
+
+            if (results.length === 0) {
+                searchResults.innerHTML = '<p style="color:#666; text-align:center;">Aucun resultat</p>';
+                return;
+            }
+
+            searchResults.innerHTML = results.map((m, i) => `
+                <div class="search-result-item" data-index="${i}">
+                    <div style="font-weight:bold; color:white;">${m.custom.name}</div>
+                    <div style="color:#888; font-size:12px;">${m.custom.addr}</div>
+                    <div style="color:${m.custom.validated ? '#666' : (m.custom.sel ? '#ef4444' : '#22c55e')}; font-size:11px; margin-top:5px;">
+                        ${m.custom.validated ? 'Valide' : (m.custom.sel ? 'Selectionne' : 'Disponible')}
+                    </div>
+                </div>
+            `).join('');
+
+            // Click sur un resultat = zoom sur le marqueur
+            searchResults.querySelectorAll('.search-result-item').forEach((el, i) => {
+                el.onclick = () => {
+                    const m = results[i];
+                    map.setView([m.custom.pos.lat, m.custom.pos.lng], 16);
+                    m.openPopup();
+                    searchModal.classList.remove('active');
+                };
+            });
+        };
+
+        // --- SAUVEGARDE (sans requetes API) ---
+        const saveModal = document.getElementById('saveModal');
+        const saveList = document.getElementById('saveList');
+        const saveBtn = document.getElementById('saveButton');
+        const saveClose = document.getElementById('saveClose');
+        const saveCurrentBtn = document.getElementById('saveCurrentBtn');
+
+        function getSaves() {
+            try {
+                return JSON.parse(localStorage.getItem('routeBuilderSaves') || '[]');
+            } catch { return []; }
+        }
+
+        function setSaves(saves) {
+            localStorage.setItem('routeBuilderSaves', JSON.stringify(saves));
+            updateSaveIcon();
+        }
+
+        function updateSaveIcon() {
+            const saves = getSaves();
+            saveBtn.classList.toggle('has-saves', saves.length > 0);
+        }
+
+        function renderSaveList() {
+            const saves = getSaves();
+            if (saves.length === 0) {
+                saveList.innerHTML = '<p style="color:#666; text-align:center;">Aucune sauvegarde</p>';
+                return;
+            }
+            saveList.innerHTML = saves.map((s, i) => `
+                <div class="save-item">
+                    <div class="save-item-info">
+                        <div style="font-weight:bold; color:white;">${s.name}</div>
+                        <div style="color:#888; font-size:12px;">${s.date}</div>
+                        <div style="color:#666; font-size:11px;">${s.markers.length} marqueurs</div>
+                    </div>
+                    <div class="save-item-actions">
+                        <button class="btn-restore" data-index="${i}">Restaurer</button>
+                        <button class="btn-delete" data-index="${i}">X</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Event handlers
+            saveList.querySelectorAll('.btn-restore').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    restoreSave(parseInt(btn.dataset.index));
+                };
+            });
+            saveList.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteSave(parseInt(btn.dataset.index));
+                };
+            });
+        }
+
+        function saveCurrentSession() {
+            // Identifier le groupe de chaque marqueur
+            const markerGroupIndices = new Map();
+            validatedMarkers.forEach((group, groupIdx) => {
+                group.forEach(m => {
+                    // On utilise l'adresse comme clÃ© unique ou une ref
+                    markerGroupIndices.set(m, groupIdx);
+                });
+            });
+
+            const markerData = allMarkers.map(m => ({
+                addr: m.custom.addr,
+                name: m.custom.name,
+                lat: m.custom.pos.lat,
+                lng: m.custom.pos.lng,
+                sel: m.custom.sel,
+                validated: m.custom.validated,
+                globalNum: m.custom.globalNum || 0,
+                trackingNum: m.custom.trackingNum || '',
+                groupIdx: markerGroupIndices.has(m) ? markerGroupIndices.get(m) : -1
+            }));
+
+            if (markerData.length === 0) {
+                alert('Aucun marqueur a sauvegarder');
+                return;
+            }
+
+            const name = prompt('Nom de la sauvegarde:', `Session ${new Date().toLocaleDateString()}`);
+            if (!name) return;
+
+            const saves = getSaves();
+            saves.push({
+                name,
+                date: new Date().toLocaleString(),
+                markers: markerData,
+                selectedGroups: selectedGroups, // Sauvegarder les groupes de donnees
+                globalCount: globalMarkerCount,
+                zip: detectedZip,
+                city: detectedCity
+            });
+            setSaves(saves);
+            renderSaveList();
+            alert('Sauvegarde effectuee!');
+        }
+
+        function restoreSave(index) {
+            const saves = getSaves();
+            const save = saves[index];
+            if (!save) return;
+
+            // Supprimer les marqueurs actuels
+            allMarkers.forEach(m => map.removeLayer(m));
+            allMarkers = [];
+            activeMarkers = [];
+            selectedAddresses = [];
+            selectedNamesValues = [];
+            validatedMarkers = [];
+            selectedGroups = [];
+            // Restaurer les variables globales
+            globalMarkerCount = save.globalCount || 0;
+            detectedZip = save.zip || '';
+            detectedCity = save.city || '';
+            selectedGroups = save.selectedGroups || [];
+
+            // Reinitialiser l'UI du tableau
+            dom.tbody.innerHTML = '';
+
+            // Reconstruire le tableau si des groupes existent
+            if (selectedGroups.length > 0) {
+                let tempCount = 1; // Recalculer le compteur global d'affichage pour le tableau
+                selectedGroups.forEach((group, i) => {
+                    let startPoint = detectedZip && detectedCity ? `${detectedZip} ${detectedCity}, France` : "paris, france";
+                    const url = `https://www.google.fr/maps/dir/${encodeURIComponent(startPoint)}/` + group.map(p => encodeURIComponent(p.addr)).join('/');
+
+                    const tr = document.createElement('tr');
+                    let html = `<td>${i + 1}</td><td>`;
+                    group.forEach(p => {
+                        html += `<div style="margin-bottom:8px;"><b>${tempCount}. ${p.name}</b><br><span style="color:#888; font-size:11px;">${p.addr.substring(0, 30)}...</span></div>`;
+                        tempCount++;
+                    });
+                    html += `<a href="${url}" target="_blank">Itineraire Google Maps</a></td>`;
+                    tr.innerHTML = html;
+                    dom.tbody.appendChild(tr);
+                });
+                countPeople = tempCount; // Restaurer le compteur pour les prochains ajouts
+
+                // Afficher les boutons
+                dom.undo.classList.remove('hidden');
+                dom.fusion.classList.remove('hidden');
+                dom.copy.classList.remove('hidden');
+                toggleSheet(true);
+            }
+
+            // Preparer validatedMarkers avec des tableaux vides pour chaque groupe
+            validatedMarkers = new Array(selectedGroups.length).fill(null).map(() => []);
+
+            // Recreer les marqueurs SANS appel API (on a deja les coords)
+            save.markers.forEach(data => {
+                const m = L.marker([data.lat, data.lng], {
+                    icon: L.divIcon({
+                        className: '',
+                        html: `<div class="m-inner ${data.validated ? 'grey' : (data.sel ? 'red' : 'green')}">${data.globalNum || ''}</div>`
+                    })
+                }).addTo(map);
+
+                m.bindPopup(`<b>${data.name}</b>${data.trackingNum ? '<br><span style=\"color:#888;\">#' + data.trackingNum + '</span>' : ''}<br>${data.addr}`);
+                m.custom = {
+                    addr: data.addr,
+                    name: data.name,
+                    pos: { lat: data.lat, lng: data.lng },
+                    sel: data.sel,
+                    validated: data.validated,
+                    globalNum: data.globalNum,
+                    trackingNum: data.trackingNum || ''
+                };
+
+                // Ajouter le click handler
+                const getInner = () => {
+                    const el = m.getElement();
+                    return el ? el.querySelector('.m-inner') : null;
+                };
+
+                m.on('click', () => {
+                    if (m.custom.validated) return;
+                    const inner = getInner();
+
+                    if (m.custom.sel) {
+                        m.custom.sel = false;
+                        if (inner) {
+                            inner.classList.remove('red');
+                            inner.classList.add('green');
+                            inner.textContent = '';
+                            inner.style.transform = "scale(1)";
+                        }
+                        const idx = activeMarkers.indexOf(m);
+                        if (idx > -1) {
+                            selectedAddresses.splice(idx, 1);
+                            selectedNamesValues.splice(idx, 1);
+                            activeMarkers.splice(idx, 1);
+                        }
+                        activeMarkers.forEach((marker, i) => {
+                            const mi = marker.getElement()?.querySelector('.m-inner');
+                            if (mi) mi.textContent = marker.custom.globalNum || (i + 1);
+                        });
+                        updateUI();
+                        return;
+                    }
+
+                    if (selectedAddresses.length >= 8) return alert("Max 8 adresses");
+                    m.custom.sel = true;
+                    globalMarkerCount++;
+                    m.custom.globalNum = globalMarkerCount;
+                    if (inner) {
+                        inner.classList.remove('green');
+                        inner.classList.add('red');
+                        inner.textContent = globalMarkerCount;
+                        inner.style.transform = "scale(1.2)";
+                    }
+                    selectedAddresses.push(data.addr);
+                    selectedNamesValues.push(data.name);
+                    activeMarkers.push(m);
+                    updateUI();
+                });
+
+                allMarkers.push(m);
+
+                if (data.sel && !data.validated) {
+                    activeMarkers.push(m);
+                    selectedAddresses.push(data.addr);
+                    selectedNamesValues.push(data.name);
+                }
+
+                // Restaurer dans le groupe validÃ© correspondant
+                if (data.validated && data.groupIdx !== undefined && data.groupIdx > -1) {
+                    if (validatedMarkers[data.groupIdx]) {
+                        validatedMarkers[data.groupIdx].push(m);
+                    }
+                }
+            });
+
+            // Zoom sur tous les marqueurs
+            if (allMarkers.length > 0) {
+                const group = L.featureGroup(allMarkers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+
+            updateUI();
+            saveModal.classList.remove('active');
+            alert('Session restauree! (' + save.markers.length + ' marqueurs)');
+        }
+
+        function deleteSave(index) {
+            if (!confirm('Supprimer cette sauvegarde?')) return;
+            const saves = getSaves();
+            saves.splice(index, 1);
+            setSaves(saves);
+            renderSaveList();
+        }
+
+        saveBtn.onclick = () => {
+            saveModal.classList.add('active');
+            renderSaveList();
+        };
+
+        saveClose.onclick = () => {
+            saveModal.classList.remove('active');
+        };
+
+        saveCurrentBtn.onclick = saveCurrentSession;
+
+        // Sauvegarde auto function
+        function performAutoSave() {
+            if (allMarkers.length > 0) {
+                // Identifier le groupe de chaque marqueur
+                const markerGroupIndices = new Map();
+                validatedMarkers.forEach((group, groupIdx) => {
+                    group.forEach(m => markerGroupIndices.set(m, groupIdx));
+                });
+
+                const autoSave = {
+                    name: 'Auto-save',
+                    date: new Date().toLocaleString(),
+                    markers: allMarkers.map(m => ({
+                        addr: m.custom.addr,
+                        name: m.custom.name,
+                        lat: m.custom.pos.lat,
+                        lng: m.custom.pos.lng,
+                        sel: m.custom.sel,
+                        validated: m.custom.validated,
+                        globalNum: m.custom.globalNum || 0,
+                        trackingNum: m.custom.trackingNum || '',
+                        groupIdx: markerGroupIndices.has(m) ? markerGroupIndices.get(m) : -1
+                    })),
+                    selectedGroups: selectedGroups,
+                    globalCount: globalMarkerCount,
+                    zip: detectedZip,
+                    city: detectedCity
+                };
+                const saves = getSaves();
+                const autoIndex = saves.findIndex(s => s.name === 'Auto-save');
+                if (autoIndex > -1) saves[autoIndex] = autoSave;
+                else saves.unshift(autoSave);
+                setSaves(saves);
+            }
+        }
+
+        // Sauvegarde auto avant de quitter (backup)
+        window.addEventListener('beforeunload', performAutoSave);
+
+        // Init
+        updateSaveIcon();
     </script>
 </body>
 
