@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Route Builder Pro - OCR & Mapping</title>
-    
+
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
@@ -19,56 +20,324 @@
             --border: #333;
         }
 
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
 
-        /* Carte Plein Écran */
-        #map { position: absolute; top: 0; bottom: 0; width: 100%; z-index: 1; }
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            z-index: 1;
+        }
 
-        /* Menu de navigation flottant */
-        .floating-header { position: absolute; top: 15px; left: 0; right: 0; z-index: 10; display: flex; justify-content: center; }
-        .pill-nav { background: var(--surface); padding: 5px; border-radius: 50px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); display: flex; gap: 5px; }
-        .pill-nav button { border: none; background: transparent; color: var(--text); padding: 12px 20px; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .pill-nav button.active { background: var(--primary); color: white; }
+        .floating-header {
+            position: absolute;
+            top: 15px;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+        }
 
-        /* Indicateurs UI */
-        .badge { position: absolute; top: 80px; right: 15px; z-index: 10; background: var(--primary); padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .control-icon { position: absolute; top: 80px; left: 15px; z-index: 10; background: var(--surface); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 20px; }
+        .pill-nav {
+            background: var(--surface);
+            padding: 5px;
+            border-radius: 50px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            display: flex;
+            gap: 5px;
+        }
 
-        /* Tiroir (Bottom Sheet) */
-        .bottom-sheet { position: absolute; bottom: 0; width: 100%; height: 60%; background: var(--surface); z-index: 20; border-radius: 24px 24px 0 0; transform: translateY(88%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1); display: flex; flex-direction: column; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); }
-        .bottom-sheet.open { transform: translateY(20%); }
-        .handle { width: 50px; height: 5px; background: #444; margin: 12px auto; border-radius: 10px; cursor: pointer; }
+        .pill-nav button {
+            border: none;
+            background: transparent;
+            color: var(--text);
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
 
-        .sheet-header { display: flex; justify-content: space-around; padding: 10px; border-bottom: 1px solid var(--border); gap: 10px; }
-        .btn-sub { background: #2a2a2a; color: var(--text); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; font-size: 12px; cursor: pointer; flex: 1; }
+        .pill-nav button.active {
+            background: var(--primary);
+            color: white;
+        }
 
-        .sheet-content { padding: 20px; overflow-y: auto; flex-grow: 1; padding-bottom: 120px; }
-        table { width: 100%; border-collapse: collapse; }
-        td { padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; }
-        a { color: var(--primary); text-decoration: none; word-break: break-all; }
+        .badge {
+            position: absolute;
+            top: 80px;
+            right: 15px;
+            z-index: 10;
+            background: var(--primary);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
 
-        /* Modal Corrélation */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: none; align-items: center; justify-content: center; }
-        .modal-content { background: var(--surface); padding: 30px; border-radius: 20px; text-align: center; width: 80%; max-width: 320px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
-        .modal-content input { width: 100%; padding: 15px; margin: 20px 0; background: #000; border: 1px solid var(--border); color: white; border-radius: 12px; font-size: 24px; text-align: center; box-sizing: border-box;}
+        .control-icon {
+            position: absolute;
+            top: 80px;
+            left: 15px;
+            z-index: 10;
+            background: var(--surface);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            font-size: 20px;
+        }
 
-        /* Barre d'action fixe en bas */
-        .action-bar { position: absolute; bottom: 20px; left: 15px; right: 15px; z-index: 30; }
-        .btn-main { width: 100%; padding: 18px; border-radius: 16px; background: var(--primary); color: white; border: none; font-weight: bold; font-size: 16px; box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4); cursor: pointer; }
-        .btn-main.disabled { background: #333; color: #666; box-shadow: none; opacity: 0.6; pointer-events: none; }
+        .bottom-sheet {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 60%;
+            background: var(--surface);
+            z-index: 20;
+            border-radius: 24px 24px 0 0;
+            transform: translateY(88%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .bottom-sheet.open {
+            transform: translateY(20%);
+        }
+
+        .handle {
+            background: var(--surface);
+            margin: 0 auto;
+            padding: 8px 20px;
+            border-radius: 20px 20px 0 0;
+            cursor: pointer;
+            text-align: center;
+            color: var(--text);
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid var(--border);
+            border-bottom: none;
+        }
+
+        .sheet-header {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+            gap: 10px;
+        }
+
+        .btn-sub {
+            background: #2a2a2a;
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .sheet-content {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-bottom: 120px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            vertical-align: top;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            width: 80%;
+            max-width: 320px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 15px;
+            margin: 20px 0;
+            background: #000;
+            border: 1px solid var(--border);
+            color: white;
+            border-radius: 12px;
+            font-size: 24px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .action-bar {
+            position: absolute;
+            bottom: 52px;
+            left: 15px;
+            right: 15px;
+            z-index: 30;
+            transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+        }
+
+        .action-bar.sheet-open {
+            bottom: calc(60% - 10%);
+        }
+
+        .btn-main {
+            width: 100%;
+            padding: 18px;
+            border-radius: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+            cursor: pointer;
+        }
+
+        .btn-main.disabled {
+            background: #333;
+            color: #666;
+            box-shadow: none;
+            opacity: 0.6;
+            pointer-events: none;
+        }
 
         /* Custom Markers */
-        .m-inner { width: 16px; height: 16px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 8px rgba(0,0,0,0.5); transition: 0.3s; }
-        .hidden { display: none !important; }
+        .m-inner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .m-inner.green {
+            background: #22c55e;
+        }
+
+        .m-inner.red {
+            background: #ef4444;
+        }
+
+        /* Selection List */
+        .selection-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .selection-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #252525;
+            padding: 12px 15px;
+            border-radius: 12px;
+            border-left: 4px solid #ef4444;
+        }
+
+        .selection-card .num {
+            background: #ef4444;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .selection-card .info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .selection-card .name {
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .selection-card .addr {
+            color: #888;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
+
 <body>
 
     <div id="correlationModal" class="modal">
         <div class="modal-content">
-            <h3 style="margin-top:0">Corrélation</h3>
-            <p style="color:#aaa; font-size:14px;">Combien d'adresses attendez-vous sur vos images ?</p>
-            <input type="number" id="expectedCount" value="1">
+            <h3 style="margin-top:0" id="modalTitle">Analyse OCR</h3>
+            <p style="color:#aaa; font-size:14px;">Nombre d'adresses attendues :</p>
+            <input type="number" id="expectedCount" value="3">
+            <p style="color:#666; font-size:12px; margin-bottom:20px;">Le code postal et la ville seront detectes
+                automatiquement</p>
             <button id="startOcrBtn" class="btn-main">Analyser les images</button>
         </div>
     </div>
@@ -77,6 +346,7 @@
         <div class="pill-nav">
             <button id="tsfButton">TSF (OCR)</button>
             <button id="otherButton">Other (CSV)</button>
+            <button id="cainiaoButton">Cainiao</button>
         </div>
     </header>
 
@@ -84,12 +354,10 @@
         <div id="map"></div>
         <div id="selectionBadge" class="badge">0 / 8</div>
         <div id="restartButton" class="control-icon">🔄</div>
-
         <input type="file" id="csvFileInput" accept=".csv" hidden />
         <input type="file" id="imageFileInput" accept="image/*" multiple hidden />
-
         <div id="bottomSheet" class="bottom-sheet">
-            <div class="handle"></div>
+            <div class="handle" id="sheetHandle">Ouvrir</div>
             <div class="sheet-header">
                 <button id="undoBtn" class="btn-sub hidden">Annuler groupe</button>
                 <button id="fusionBtn" class="btn-sub hidden">Fusionner</button>
@@ -98,7 +366,10 @@
             <div class="sheet-content">
                 <table id="addressTable">
                     <thead>
-                        <tr><th style="text-align:left; color:#666; font-size:11px;">#</th><th style="text-align:left; color:#666; font-size:11px;">ITINÉRAIRES GÉNÉRÉS</th></tr>
+                        <tr>
+                            <th style="text-align:left; color:#666; font-size:11px;">#</th>
+                            <th style="text-align:left; color:#666; font-size:11px;">ITINERAIRES GENERES</th>
+                        </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
@@ -108,72 +379,31 @@
     </main>
 
     <footer class="action-bar">
-        <button id="validateBtn" class="btn-main disabled">Valider la sélection (0/8)</button>
+        <button id="validateBtn" class="btn-main disabled">Valider la selection (0/8)</button>
     </footer>
 
     <script>
-        // --- CONFIGURATION ---
         const apiKey = 'de012302a8b6464691dbd1df48f474fe';
         const map = L.map('map', { zoomControl: false }).setView([48.8566, 2.3522], 12);
-        // Use a primary tile provider and attach a fallback in case tiles fail to load on GH Pages
-        const primaryTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
-        let fallbackTiles = null;
-        primaryTiles.on('tileerror', (err) => {
-            console.error('Primary tile provider error:', err);
-            if (!fallbackTiles) {
-                fallbackTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-                alert('Problème de tuiles détecté — basculement vers OpenStreetMap.');
-            }
-        });
-
-        // Ensure map resizes correctly when the page loads or layout changes (fix pour GitHub Pages)
-        // Multiple invalidateSize calls at different intervals to handle slow page loads
-        function forceMapRefresh() {
-            try { 
-                map.invalidateSize(); 
-                console.log('map.invalidateSize() called'); 
-            } catch (e) { 
-                console.error(e); 
-            }
-        }
-        
-        window.addEventListener('load', () => {
-            // Multiple attempts with increasing delays for GitHub Pages
-            [100, 500, 1000, 2000].forEach(delay => {
-                setTimeout(forceMapRefresh, delay);
-            });
-        });
-        
-        // Also trigger when document is fully ready
-        if (document.readyState === 'complete') {
-            forceMapRefresh();
-        } else {
-            document.addEventListener('DOMContentLoaded', () => {
-                setTimeout(forceMapRefresh, 100);
-            });
-        }
-        
-        window.addEventListener('resize', forceMapRefresh);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
 
         const geocodeCache = new Map();
-        let selectedAddresses = [];
-        let selectedNamesValues = [];
-        let activeMarkers = []; 
-        let selectedGroups = [];
-        let platform = null;
-        let countPeople = 1;
+        let selectedAddresses = [], selectedNamesValues = [], activeMarkers = [], selectedGroups = [];
+        let platform = null, countPeople = 1;
+        let detectedZip = "", detectedCity = "";
 
-        const addressKeywords = ['rue', 'avenue', 'boulevard', 'place', 'chemin', 'route', 'square', 'impasse', 'allée', 'quai', 'cité', 'cours'];
+        const addressKeywords = ['rue', 'avenue', 'boulevard', 'place', 'chemin', 'route', 'square', 'impasse', 'allee', 'quai', 'cite', 'cours', 'bd'];
         const refPackKeywords = ['LORL', 'LORP', 'TFA', 'LORN'];
-        const fullNameRegex = /(Mme\/m|M|Mme)\s+([A-ZÀ-ÿ][a-zA-ZÀ-ÿ.]+(?:\s+[A-ZÀ-ÿ][a-zA-ZÀ-ÿ.]+)*)/g;
+        const fullNameRegex = /(Mme\/m|M|Mme)\s+([A-Za-z][a-zA-Z.]+(?:\s+[A-Za-z][a-zA-Z.]+)*)/g;
 
-        // --- ELEMENTS UI ---
         const dom = {
             tsf: document.getElementById('tsfButton'),
             other: document.getElementById('otherButton'),
+            cainiao: document.getElementById('cainiaoButton'),
             imgInput: document.getElementById('imageFileInput'),
             csvInput: document.getElementById('csvFileInput'),
             modal: document.getElementById('correlationModal'),
+            modalTitle: document.getElementById('modalTitle'),
             startOcr: document.getElementById('startOcrBtn'),
             expected: document.getElementById('expectedCount'),
             badge: document.getElementById('selectionBadge'),
@@ -186,111 +416,317 @@
             listContainer: document.getElementById('addressListContainer')
         };
 
-        // --- NAVIGATION & FILES ---
-        dom.tsf.onclick = () => { platform = "TSF"; dom.imgInput.click(); };
-        dom.other.onclick = () => { platform = "Other"; dom.csvInput.click(); };
-        document.getElementById('restartButton').onclick = () => window.location.reload();
+        // Navigation - set active button and platform
+        function setActiveMode(mode) {
+            platform = mode;
+            dom.tsf.classList.toggle('active', mode === 'TSF');
+            dom.cainiao.classList.toggle('active', mode === 'Cainiao');
+            dom.other.classList.toggle('active', mode === 'CSV');
+            dom.modalTitle.textContent = mode === 'Cainiao' ? 'Analyse Cainiao' : 'Analyse TSF';
+        }
 
+        dom.tsf.onclick = () => { setActiveMode('TSF'); dom.imgInput.click(); };
+        dom.cainiao.onclick = () => { setActiveMode('Cainiao'); dom.imgInput.click(); };
+        dom.other.onclick = () => { setActiveMode('CSV'); dom.csvInput.click(); };
+        document.getElementById('restartButton').onclick = () => window.location.reload();
         dom.imgInput.onchange = () => { dom.modal.style.display = 'flex'; };
-        
+
         const toggleSheet = (open) => {
             dom.sheet.classList.toggle('open', open);
-            // After the CSS transition, invalidate the map size so Leaflet re-renders tiles correctly
-            dom.sheet.addEventListener('transitionend', () => {
-                try { map.invalidateSize(); } catch (e) { console.error(e); }
-            }, { once: true });
+            document.getElementById('sheetHandle').textContent = open ? 'Fermer' : 'Ouvrir';
+            document.querySelector('.action-bar').classList.toggle('sheet-open', open);
         };
-        document.querySelector('.handle').onclick = () => toggleSheet(!dom.sheet.classList.contains('open'));
+        document.getElementById('sheetHandle').onclick = () => toggleSheet(!dom.sheet.classList.contains('open'));
 
-        // --- LOGIQUE GÉO ---
         async function getCoords(addr) {
             if (geocodeCache.has(addr)) return geocodeCache.get(addr);
             try {
                 const r = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(addr)}&key=${apiKey}`);
                 const d = await r.json();
-                if (d.results.length > 0) {
-                    geocodeCache.set(addr, d.results[0].geometry);
-                    return d.results[0].geometry;
-                }
+                if (d.results.length > 0) { geocodeCache.set(addr, d.results[0].geometry); return d.results[0].geometry; }
             } catch (e) { console.error(e); }
             return null;
         }
 
+        // Marqueur avec selection/deselection (logique Cainiao)
         async function createMarker(addr, name) {
             const pos = await getCoords(addr);
             if (!pos) return;
 
             const m = L.marker([pos.lat, pos.lng], {
-                icon: L.divIcon({ className: '', html: `<div class="m-inner" style="background:#666"></div>` })
+                icon: L.divIcon({ className: '', html: `<div class="m-inner green"></div>` })
             }).addTo(map);
 
             m.bindPopup(`<b>${name}</b><br>${addr}`);
             m.custom = { addr, name, pos, sel: false };
 
-            m.on('click', () => {
-                if (m.custom.sel) return;
-                if (selectedAddresses.length >= 8) return alert("Max 8 adresses");
+            // Helper to get inner element safely
+            const getInner = () => {
+                const el = m.getElement();
+                return el ? el.querySelector('.m-inner') : null;
+            };
 
-                m.custom.sel = true;
-                const inner = m.getElement && m.getElement().querySelector ? m.getElement().querySelector('.m-inner') : null;
-                if (inner) {
-                    inner.style.background = "#3b82f6";
-                    inner.style.transform = "scale(1.3)";
+            m.on('click', () => {
+                const inner = getInner();
+                console.log(">>> CLICK MARKER:", addr);
+                console.log(">>> Element:", m.getElement());
+                console.log(">>> Inner:", inner);
+
+                if (m.custom.sel) {
+                    // DESELECT
+                    m.custom.sel = false;
+                    if (inner) {
+                        inner.classList.remove('red');
+                        inner.classList.add('green');
+                        inner.textContent = '';
+                        inner.style.transform = "scale(1)";
+                    }
+                    const idx = activeMarkers.indexOf(m);
+                    if (idx > -1) {
+                        selectedAddresses.splice(idx, 1);
+                        selectedNamesValues.splice(idx, 1);
+                        activeMarkers.splice(idx, 1);
+                    }
+                    // Renumber remaining
+                    activeMarkers.forEach((marker, i) => {
+                        const markerEl = marker.getElement();
+                        const mi = markerEl ? markerEl.querySelector('.m-inner') : null;
+                        if (mi) mi.textContent = i + 1;
+                    });
+                    updateUI();
+                    return;
                 }
 
+                // SELECT
+                if (selectedAddresses.length >= 8) return alert("Max 8 adresses");
+                m.custom.sel = true;
+                const selNum = selectedAddresses.length + 1;
+                if (inner) {
+                    inner.classList.remove('green');
+                    inner.classList.add('red');
+                    inner.textContent = selNum;
+                    inner.style.transform = "scale(1.2)";
+                }
                 selectedAddresses.push(addr);
                 selectedNamesValues.push(name);
                 activeMarkers.push(m);
                 updateUI();
             });
 
-            // return the marker so callers can programmatically modify it (useful for undo)
             return m;
         }
 
         function updateUI() {
             const n = selectedAddresses.length;
             dom.badge.textContent = `${n} / 8`;
-            dom.validate.textContent = `Valider la sélection (${n}/8)`;
+            dom.validate.textContent = `Valider la selection (${n}/8)`;
             dom.validate.classList.toggle('disabled', n === 0);
+            renderSelectionList();
         }
 
-        // --- OCR ---
+        function renderSelectionList() {
+            let listDiv = document.getElementById('selectionListDiv');
+            if (!listDiv) {
+                listDiv = document.createElement('div');
+                listDiv.id = 'selectionListDiv';
+                listDiv.className = 'selection-list';
+                dom.listContainer.appendChild(listDiv);
+            }
+            if (selectedAddresses.length === 0) {
+                listDiv.innerHTML = '<p style="color:#666; text-align:center;">Cliquez sur les marqueurs verts pour selectionner</p>';
+                return;
+            }
+            listDiv.innerHTML = selectedAddresses.map((addr, i) => `
+                <div class="selection-card">
+                    <div class="num">${i + 1}</div>
+                    <div class="info">
+                        <div class="name">${selectedNamesValues[i]}</div>
+                        <div class="addr">${addr}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- OCR (OCR.space API + Tesseract fallback) ---
         dom.startOcr.onclick = async () => {
-            const goal = parseInt(dom.expected.value);
+            console.log(`\n========================================`);
+            console.log(`>>> MODE: ${platform}`);
+            console.log(`========================================`);
+
             dom.modal.style.display = 'none';
-            let found = 0;
-            
+            let foundCount = 0;
+            detectedZip = ""; detectedCity = "";
+
+            let statusDiv = document.getElementById('ocrStatus');
+            if (!statusDiv) {
+                statusDiv = document.createElement('div');
+                statusDiv.id = 'ocrStatus';
+                statusDiv.style.cssText = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:rgba(0,0,0,0.9); padding:20px; border-radius:10px; z-index:2000; color:white; text-align:center; min-width:300px;";
+                document.body.appendChild(statusDiv);
+            }
+            statusDiv.style.display = 'block';
+
+            // Helper pour ZIP (Cainiao)
+            const findZipInText = (text) => {
+                const m1 = text.match(/(\d{5})\s*[,.]?\s*(Villejuif|Paris|Vitry|Ivry|Kremlin|Cachan|Arcueil|Gentilly|Fresnes|Thiais|Orly|Choisy|Montrouge)/i);
+                if (m1) return { zip: m1[1], city: m1[2] };
+                const m2 = text.match(/\b(75|77|78|91|92|93|94|95)\d{3}\b/);
+                if (m2) {
+                    const dm = { '94': 'Val-de-Marne', '75': 'Paris', '92': 'Hauts-de-Seine', '93': 'Seine-Saint-Denis', '91': 'Essonne' };
+                    return { zip: m2[0], city: dm[m2[0].substring(0, 2)] || 'Ile-de-France' };
+                }
+                return null;
+            };
+
             for (const file of dom.imgInput.files) {
-                const { data: { text } } = await Tesseract.recognize(file, 'fra+eng');
-                const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+                let text = "";
 
-                for (let i = 0; i < lines.length; i++) {
-                    let name = "";
-                    const isRef = refPackKeywords.some(k => lines[i].includes(k));
-                    const match = lines[i].match(fullNameRegex);
+                // PRIMARY: OCR.space API
+                console.log(`\n========================================`);
+                console.log(`>>> MOTEUR OCR: OCR.space API`);
+                console.log(`========================================`);
+                statusDiv.innerHTML = "OCR.space API en cours...";
 
-                    if (isRef && lines[i+1]) { name = lines[i+1]; i++; }
-                    else if (match) { name = match[0]; }
+                try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('language', 'fre');
+                    formData.append('isOverlayRequired', 'false');
+                    formData.append('OCREngine', '2');
 
-                    if (name) {
-                        for (let j = 1; j <= 3 && (i+j) < lines.length; j++) {
-                            const l = lines[i+j].toLowerCase();
-                            if (l.startsWith('>') || addressKeywords.some(k => l.includes(k))) {
-                                const clean = lines[i+j].replace(/[“”>]/g, '').trim();
-                                await createMarker(clean, name);
-                                found++;
-                                break;
+                    const response = await fetch('https://api.ocr.space/parse/image', {
+                        method: 'POST',
+                        headers: { 'apikey': 'K85674568488957' },
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    if (result.ParsedResults && result.ParsedResults[0]) {
+                        text = result.ParsedResults[0].ParsedText;
+                        console.log(">>> OCR.space - SUCCES!");
+                        console.log("--- TEXTE DETECTE ---");
+                        console.log(text);
+                        console.log("---------------------");
+                    }
+                } catch (e) {
+                    console.log("OCR.space API error:", e);
+                }
+
+                // FALLBACK: Tesseract
+                if (!text || text.trim().length < 10) {
+                    console.log(`\n========================================`);
+                    console.log(`>>> MOTEUR OCR: Tesseract (fallback)`);
+                    console.log(`========================================`);
+                    statusDiv.innerHTML = "Fallback Tesseract...";
+
+                    const result = await Tesseract.recognize(file, 'fra+eng', {
+                        logger: m => {
+                            if (m.status === 'recognizing text') {
+                                statusDiv.innerHTML = `Tesseract: ${Math.round(m.progress * 100)}%`;
+                            }
+                        }
+                    });
+                    text = result.data.text;
+                    console.log(">>> Tesseract RESULT:");
+                    console.log(text);
+                }
+
+                statusDiv.innerHTML = "Extraction des adresses...";
+                const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+                console.log("--- RAW LINES ---");
+                lines.forEach((l, i) => console.log(`${i}: ${l}`));
+
+                // MODE CAINIAO
+                if (platform === 'Cainiao') {
+                    // Detect ZIP
+                    const zipFound = findZipInText(text);
+                    if (zipFound) {
+                        detectedZip = zipFound.zip;
+                        detectedCity = zipFound.city;
+                        console.log(`>>> ZIP detecte: ${detectedZip} ${detectedCity}`);
+                    } else {
+                        const userZip = prompt("Code postal non detecte.\nEntrez le code postal (ex: 94800):", "");
+                        if (userZip?.match(/^\d{5}$/)) {
+                            detectedZip = userZip;
+                            const dm = { '94': 'Val-de-Marne', '75': 'Paris', '92': 'Hauts-de-Seine' };
+                            detectedCity = dm[userZip.substring(0, 2)] || 'France';
+                        } else {
+                            alert("Analyse annulee");
+                            statusDiv.style.display = 'none';
+                            return;
+                        }
+                    }
+
+                    statusDiv.innerHTML = `Zone: ${detectedZip} ${detectedCity}<br>Extraction...`;
+
+                    for (let i = 0; i < lines.length; i++) {
+                        const lineLower = lines[i].toLowerCase();
+                        if (addressKeywords.some(kw => lineLower.includes(kw))) {
+                            let rawAddress = lines[i];
+                            let tokens = rawAddress.split(/\s+/);
+                            const isNoise = (t) => t.length <= 2 || /^[@OoQq0-9]+$/.test(t);
+                            if (tokens.length > 2 && isNoise(tokens[tokens.length - 1])) tokens.pop();
+                            if (tokens.length > 2 && isNoise(tokens[tokens.length - 1])) tokens.pop();
+                            rawAddress = tokens.join(' ').replace(/[@]/g, '').trim();
+                            const numAtEnd = rawAddress.match(/^([A-Za-z\s]+)\s+(\d+(?:[a-zA-Z])?)$/);
+                            if (numAtEnd) rawAddress = `${numAtEnd[2]} ${numAtEnd[1].trim()}`;
+                            const fullAddress = `${rawAddress}, ${detectedZip} ${detectedCity}, France`;
+
+                            // Find name (bullet point or pattern)
+                            let name = "Client";
+                            for (let j = 1; j <= 5 && (i + j) < lines.length; j++) {
+                                const candidate = lines[i + j];
+                                if (candidate.startsWith('\u2022') || candidate.startsWith('&') || candidate.startsWith('*')) {
+                                    name = candidate.replace(/^[\u2022&*]\s*/, '').replace(/\s*\d+\s*$/, '').trim();
+                                    if (name.length > 2) break;
+                                }
+                                if (candidate.match(/^[A-Z][a-z]+\s+[A-Z]{2,}/)) {
+                                    name = candidate.replace(/\s*\d+\s*$/, '').trim();
+                                    if (name.length > 2) break;
+                                }
+                            }
+
+                            console.log(`>>> FOUND: "${fullAddress}" | Client: "${name}"`);
+                            await createMarker(fullAddress, name);
+                            foundCount++;
+                        }
+                    }
+                }
+                // MODE TSF
+                else {
+                    for (let i = 0; i < lines.length; i++) {
+                        let name = "";
+                        const isRef = refPackKeywords.some(k => lines[i].includes(k));
+                        const match = lines[i].match(fullNameRegex);
+
+                        if (isRef && lines[i + 1]) { name = lines[i + 1]; i++; }
+                        else if (match) { name = match[0]; }
+
+                        if (name) {
+                            for (let j = 1; j <= 3 && (i + j) < lines.length; j++) {
+                                const l = lines[i + j].toLowerCase();
+                                if (l.startsWith('>') || addressKeywords.some(k => l.includes(k))) {
+                                    const clean = lines[i + j].replace(/[">]/g, '').trim();
+                                    console.log(`>>> FOUND: "${clean}" | Client: "${name}"`);
+                                    await createMarker(clean, name);
+                                    foundCount++;
+                                    break;
+                                }
                             }
                         }
                     }
                 }
             }
-            if (found < goal) alert(`Corrélation : ${found}/${goal} trouvées.`);
-            if (found > 0) toggleSheet(false);
+
+            statusDiv.innerHTML = `${foundCount} adresse(s) trouvee(s)!`;
+            setTimeout(() => { statusDiv.style.display = 'none'; }, 2000);
+
+            const goal = parseInt(dom.expected.value);
+            if (foundCount < goal) alert(`Correlation : ${foundCount}/${goal} trouvees.`);
+            if (foundCount > 0) toggleSheet(false);
         };
 
-        // --- CSV ---
+        // CSV
         dom.csvInput.onchange = (e) => {
             Papa.parse(e.target.files[0], {
                 header: true,
@@ -298,118 +734,84 @@
                     for (const row of res.data) {
                         const k = Object.keys(row);
                         if (k.length < 3) continue;
-                        const a = `${row[k[2]]||''}, ${row[k[3]]||''}, ${row[k[4]]||''}`;
+                        const a = `${row[k[2]] || ''}, ${row[k[3]] || ''}, ${row[k[4]] || ''}`;
                         await createMarker(a, row[k[1]] || "Client");
                     }
                 }
             });
         };
 
-        // --- VALIDATION & EXPORT ---
+        // Validation
         dom.validate.onclick = () => {
-            const group = selectedAddresses.map((a, i) => ({ 
-                addr: a, 
-                name: selectedNamesValues[i] 
-            }));
+            const group = selectedAddresses.map((a, i) => ({ addr: a, name: selectedNamesValues[i] }));
             selectedGroups.push(group);
 
-            const urlBase = "https://www.google.fr/maps/dir/paris, france/";
-            const url = urlBase + group.map(p => encodeURIComponent(p.addr)).join('/');
+            let startPoint = detectedZip && detectedCity ? `${detectedZip} ${detectedCity}, France` : "paris, france";
+            const url = `https://www.google.fr/maps/dir/${encodeURIComponent(startPoint)}/` + group.map(p => encodeURIComponent(p.addr)).join('/');
 
             const tr = document.createElement('tr');
             let html = `<td>${selectedGroups.length}</td><td>`;
-            group.forEach(p => {
-                html += `<div style="margin-bottom:8px;"><b>${countPeople}. ${p.name}</b><br><span style="color:#888; font-size:11px;">${p.addr.substring(0,30)}...</span></div>`;
-                countPeople++;
-            });
-            html += `<a href="${url}" target="_blank">→ Itinéraire Google Maps</a></td>`;
+            group.forEach(p => { html += `<div style="margin-bottom:8px;"><b>${countPeople}. ${p.name}</b><br><span style="color:#888; font-size:11px;">${p.addr.substring(0, 30)}...</span></div>`; countPeople++; });
+            html += `<a href="${url}" target="_blank">Itineraire Google Maps</a></td>`;
             tr.innerHTML = html;
             dom.tbody.appendChild(tr);
 
-            // Reset
             activeMarkers.forEach(m => map.removeLayer(m));
-            activeMarkers = [];
-            selectedAddresses = [];
-            selectedNamesValues = [];
+            activeMarkers = []; selectedAddresses = []; selectedNamesValues = [];
             updateUI();
-            
-            dom.undo.classList.remove('hidden');
-            dom.fusion.classList.remove('hidden');
+
+            dom.undo.classList.remove('hidden'); dom.fusion.classList.remove('hidden');
             toggleSheet(true);
         };
 
         dom.fusion.onclick = () => {
             dom.listContainer.innerHTML = "";
             const all = selectedGroups.flat();
-            const base = "https://www.google.fr/maps/dir/paris, France/";
-            
             for (let i = 0; i < all.length; i += 8) {
                 const chunk = all.slice(i, i + 8);
-                const url = base + chunk.map(p => encodeURIComponent(p.addr)).join('/');
+                const url = "https://www.google.fr/maps/dir/paris, France/" + chunk.map(p => encodeURIComponent(p.addr)).join('/');
                 const d = document.createElement('div');
                 d.style.cssText = "background:#252525; padding:15px; border-radius:12px; margin-bottom:15px; border-left:4px solid var(--primary)";
-                d.innerHTML = `<strong style="display:block; margin-bottom:5px;">Lot ${Math.floor(i/8)+1}</strong><a href="${url}" style="font-size:11px;">${url}</a>`;
+                d.innerHTML = `<strong>Lot ${Math.floor(i / 8) + 1}</strong><br><a href="${url}" style="font-size:11px;">${url}</a>`;
                 dom.listContainer.appendChild(d);
             }
             dom.copy.classList.remove('hidden');
         };
 
         dom.copy.onclick = () => {
-            let txt = "";
             const all = selectedGroups.flat();
-            if (all.length === 0) return alert("Aucun résultat à copier.");
-
+            if (!all.length) return alert("Aucun resultat.");
+            let txt = "";
             for (let i = 0; i < all.length; i += 8) {
                 const chunk = all.slice(i, i + 8);
                 const url = "https://www.google.fr/maps/dir/paris, France/" + chunk.map(p => encodeURIComponent(p.addr)).join('/');
-                txt += `Lot ${Math.floor(i/8)+1} - ${url}\n`;
-                chunk.forEach((p, idx) => {
-                    txt += `${i + idx + 1} - ${p.name} - ${p.addr}\n`;
-                });
+                txt += `Lot ${Math.floor(i / 8) + 1} - ${url}\n`;
+                chunk.forEach((p, idx) => { txt += `${i + idx + 1} - ${p.name} - ${p.addr}\n`; });
                 txt += "\n";
             }
-
-            navigator.clipboard.writeText(txt).then(() => alert("Copié dans le presse-papier !"));
+            navigator.clipboard.writeText(txt).then(() => alert("Copie!"));
         };
 
         dom.undo.onclick = async () => {
-            if (selectedGroups.length === 0) return;
-
-            // Remove last saved group from the list and table
+            if (!selectedGroups.length) return;
             const lastGroup = selectedGroups.pop();
             dom.tbody.removeChild(dom.tbody.lastChild);
-
-            // Recreate markers for each address in the removed group and restore selection state
             for (const p of lastGroup) {
-                try {
-                    const m = await createMarker(p.addr, p.name);
-                    if (!m) continue;
-                    // mark it as selected visually and in state
+                const m = await createMarker(p.addr, p.name);
+                if (m) {
                     m.custom.sel = true;
-                    const inner = m.getElement && m.getElement().querySelector ? m.getElement().querySelector('.m-inner') : null;
-                    if (inner) {
-                        inner.style.background = "#3b82f6";
-                        inner.style.transform = "scale(1.3)";
-                    }
+                    const inner = m.getElement?.querySelector?.('.m-inner');
+                    if (inner) { inner.classList.remove('green'); inner.classList.add('red'); }
                     selectedAddresses.push(p.addr);
                     selectedNamesValues.push(p.name);
                     activeMarkers.push(m);
-                } catch (e) { console.error('Failed to restore marker', e); }
+                }
             }
-
             updateUI();
-
-            if (dom.tbody.children.length === 0) {
-                dom.undo.classList.add('hidden');
-                dom.fusion.classList.add('hidden');
-                dom.copy.classList.add('hidden');
-                dom.listContainer.innerHTML = '';
-            }
-
-            // close sheet to give focus back to the map
+            if (!dom.tbody.children.length) { dom.undo.classList.add('hidden'); dom.fusion.classList.add('hidden'); dom.copy.classList.add('hidden'); dom.listContainer.innerHTML = ''; }
             toggleSheet(false);
         };
-
     </script>
 </body>
+
 </html>
