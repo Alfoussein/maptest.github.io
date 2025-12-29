@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Route Builder Pro - OCR & Mapping</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #121212;
+            --surface: #1e1e1e;
+            --primary: #3b82f6;
+            --text: #e5e7eb;
+            --border: #333;
+        }
+
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            z-index: 1;
+        }
+
+        .floating-header {
+            position: absolute;
+            top: 15px;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+        }
+
+        .pill-nav {
+            background: var(--surface);
+            padding: 5px;
+            border-radius: 50px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            display: flex;
+            gap: 5px;
+        }
+
+        .pill-nav button {
+            border: none;
+            background: transparent;
+            color: var(--text);
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .pill-nav button.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .badge {
+            position: absolute;
+            top: 80px;
+            right: 15px;
+            z-index: 10;
+            background: var(--primary);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-icon {
+            position: absolute;
+            top: 80px;
+            left: 15px;
+            z-index: 10;
+            background: var(--surface);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            font-size: 20px;
+        }
+
+        .bottom-sheet {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 60%;
+            background: var(--surface);
+            z-index: 20;
+            border-radius: 24px 24px 0 0;
+            transform: translateY(88%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .bottom-sheet.open {
+            transform: translateY(25%);
+        }
+
+        .handle {
+            background: var(--surface);
+            margin: 0 auto;
+            padding: 8px 20px;
+            border-radius: 20px 20px 0 0;
+            cursor: pointer;
+            text-align: center;
+            color: var(--text);
+            font-size: 12px;
+            font-weight: bold;
+            border: 1px solid var(--border);
+            border-bottom: none;
+        }
+
+        .sheet-header {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+            gap: 10px;
+        }
+
+        .btn-sub {
+            background: #2a2a2a;
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .sheet-content {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-bottom: 120px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+            vertical-align: top;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            width: 80%;
+            max-width: 320px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 15px;
+            margin: 20px 0;
+            background: #000;
+            border: 1px solid var(--border);
+            color: white;
+            border-radius: 12px;
+            font-size: 24px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .action-bar {
+            position: absolute;
+            bottom: 52px;
+            left: 15px;
+            right: 15px;
+            z-index: 30;
+            transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+        }
+
+        .action-bar.sheet-open {
+            bottom: calc(75% - 80px);
+            /* Ajuste pour etre plus bas, plus proche du handle */
+        }
+
+        /* Search Modal */
+        .search-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .search-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 150;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .search-modal.active {
+            display: flex;
+        }
+
+        .search-header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .search-close {
+            background: #ef4444;
+            border: none;
+            color: white;
+            width: 50px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .search-results {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .search-result-item {
+            background: var(--surface);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+            cursor: pointer;
+        }
+
+        .search-result-item:hover {
+            background: #2a2a2a;
+        }
+
+        /* Save Icon */
+        .save-icon {
+            position: absolute;
+            top: 80px;
+            right: 70px;
+            z-index: 10;
+            background: var(--surface);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            font-size: 18px;
+        }
+
+        .save-icon.has-saves {
+            background: #22c55e;
+        }
+
+        .save-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 150;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .save-modal.active {
+            display: flex;
+        }
+
+        .save-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .save-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .save-item {
+            background: var(--surface);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .save-item-info {
+            flex: 1;
+        }
+
+        .save-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .save-item-actions button {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-restore {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-save-current {
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            width: 100%;
+            margin-top: 15px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-main {
+            width: 100%;
+            padding: 18px;
+            border-radius: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-weight: bold;
+            font-size: 16px;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+            cursor: pointer;
+        }
+
+        .btn-main.disabled {
+            background: #333;
+            color: #666;
+            box-shadow: none;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Custom Markers */
+        .m-inner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .m-inner.green {
+            background: #22c55e;
+        }
+
+        .m-inner.red {
+            background: #ef4444;
+        }
+
+        .m-inner.grey {
+            background: #666;
+            opacity: 0.7;
+        }
+
+        /* Selection List */
+        .selection-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .selection-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #252525;
+            padding: 12px 15px;
+            border-radius: 12px;
+            border-left: 4px solid #ef4444;
+        }
+
+        .selection-card .num {
+            background: #ef4444;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .selection-card .info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .selection-card .name {
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .selection-card .addr {
+            color: #888;
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="correlationModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0" id="modalTitle">Analyse OCR</h3>
+            <p style="color:#aaa; font-size:14px;">Nombre d'adresses attendues :</p>
+            <input type="number" id="expectedCount" value="3">
+            <p style="color:#666; font-size:12px; margin-bottom:20px;">Le code postal et la ville seront detectes
+                automatiquement</p>
+            <button id="startOcrBtn" class="btn-main">Analyser les images</button>
+        </div>
+    </div>
+
+    <header class="floating-header">
+        <div class="pill-nav">
+            <button id="tsfButton">TSF (OCR)</button>
+            <button id="otherButton">Other (CSV)</button>
+            <button id="cainiaoButton">Cainiao</button>
+            <button id="addImgBtn" title="Ajouter des images" style="padding: 10px 15px; font-size: 18px;">+</button>
+        </div>
+    </header>
+
+    <main>
+        <div id="map"></div>
+        <div id="selectionBadge" class="badge">0 / 8</div>
+        <div id="restartButton" class="control-icon">🔄</div>
+        <div id="saveButton" class="save-icon" title="Sauvegardes">💾</div>
+        <input type="file" id="csvFileInput" accept=".csv" hidden />
+        <input type="file" id="imageFileInput" accept="image/*" multiple hidden />
+        <div id="bottomSheet" class="bottom-sheet">
+            <div class="handle" id="sheetHandle">Ouvrir</div>
+            <div class="sheet-header">
+                <button id="searchBtn" class="search-btn" title="Rechercher">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.35-4.35" />
+                    </svg>
+                </button>
+                <button id="undoBtn" class="btn-sub hidden">Annuler groupe</button>
+                <button id="fusionBtn" class="btn-sub hidden">Fusionner</button>
+                <button id="copyBtn" class="btn-sub hidden">Copier tout</button>
+            </div>
+            <div class="sheet-content">
+                <table id="addressTable">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left; color:#666; font-size:11px;">#</th>
+                            <th style="text-align:left; color:#666; font-size:11px;">ITINERAIRES GENERES</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div id="addressListContainer" style="margin-top:20px;"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="action-bar">
+        <button id="validateBtn" class="btn-main disabled">Valider la selection (0/8)</button>
+    </footer>
+
+    <!-- Search Modal -->
+    <div id="searchModal" class="search-modal">
+        <div class="search-header">
+            <input type="text" id="searchInput" class="search-input" placeholder="Nom ou tracking...">
+            <button id="scanInSearchBtn" class="search-btn" title="Scanner" style="margin-left:5px;">📷</button>
+            <button id="searchClose" class="search-close" style="margin-left:5px;">X</button>
+        </div>
+        <div id="searchResults" class="search-results"></div>
+    </div>
+
+    <!-- Save Modal -->
+    <div id="saveModal" class="save-modal">
+        <div class="save-header">
+            <h3 style="margin:0; color:white;">Sauvegardes</h3>
+            <button id="saveClose" class="search-close">X</button>
+        </div>
+        <div id="saveList" class="save-list"></div>
+        <button id="saveCurrentBtn" class="btn-save-current">Sauvegarder la session actuelle</button>
+    </div>
+
+    <!-- Scanner Modal -->
+    <div id="scannerModal" class="search-modal" style="z-index:200;">
+        <div class="search-header">
+            <h3 style="margin:0; color:white;">Scanner</h3>
+            <button id="scannerClose" class="search-close">X</button>
+        </div>
+        <div id="reader" style="width:100%; flex:1; background:black;"></div>
+    </div>
+
+    <script>
+        const apiKey = 'de012302a8b6464691dbd1df48f474fe';
+        const map = L.map('map', { zoomControl: false }).setView([48.8566, 2.3522], 12);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+
+        const geocodeCache = new Map();
+        let selectedAddresses = [], selectedNamesValues = [], activeMarkers = [], selectedGroups = [];
+        let validatedMarkers = []; // Marqueurs valides en gris
+        let allMarkers = []; // Tous les marqueurs pour la recherche
+        let globalMarkerCount = 0; // Compteur global pour la numerotation
+        let platform = null, countPeople = 1;
+        let detectedZip = "", detectedCity = "";
+        let isAppending = false; // Mode ajout d'images
+
+        const addressKeywords = ['rue', 'avenue', 'boulevard', 'place', 'chemin', 'route', 'square', 'impasse', 'allee', 'quai', 'cite', 'cours', 'bd'];
+        const refPackKeywords = ['LORL', 'LORP', 'TFA', 'LORN'];
+        const fullNameRegex = /(Mme\/m|M|Mme)\s+([A-Za-z][a-zA-Z.]+(?:\s+[A-Za-z][a-zA-Z.]+)*)/g;
+
+        const dom = {
+            tsf: document.getElementById('tsfButton'),
+            other: document.getElementById('otherButton'),
+            cainiao: document.getElementById('cainiaoButton'),
+            imgInput: document.getElementById('imageFileInput'),
+            csvInput: document.getElementById('csvFileInput'),
+            modal: document.getElementById('correlationModal'),
+            modalTitle: document.getElementById('modalTitle'),
+            startOcr: document.getElementById('startOcrBtn'),
+            expected: document.getElementById('expectedCount'),
+            badge: document.getElementById('selectionBadge'),
+            validate: document.getElementById('validateBtn'),
+            sheet: document.getElementById('bottomSheet'),
+            tbody: document.querySelector('#addressTable tbody'),
+            undo: document.getElementById('undoBtn'),
+            fusion: document.getElementById('fusionBtn'),
+            copy: document.getElementById('copyBtn'),
+            listContainer: document.getElementById('addressListContainer')
+        };
+
+        // Navigation - set active button and platform
+        function setActiveMode(mode) {
+            platform = mode;
+            dom.tsf.classList.toggle('active', mode === 'TSF');
+            dom.cainiao.classList.toggle('active', mode === 'Cainiao');
+            dom.other.classList.toggle('active', mode === 'CSV');
+            dom.modalTitle.textContent = mode === 'Cainiao' ? 'Analyse Cainiao' : 'Analyse TSF';
+        }
+
+        dom.tsf.onclick = () => { isAppending = false; setActiveMode('TSF'); dom.imgInput.click(); };
+        dom.cainiao.onclick = () => { isAppending = false; setActiveMode('Cainiao'); dom.imgInput.click(); };
+        dom.other.onclick = () => { isAppending = false; setActiveMode('CSV'); dom.csvInput.click(); };
+        document.getElementById('addImgBtn').onclick = () => {
+            if (!platform) return alert("Selectionnez d'abord un mode (TSF/Cainiao)");
+            isAppending = true;
+            dom.imgInput.click();
+        };
+        document.getElementById('restartButton').onclick = () => {
+            if (confirm('Tout effacer ?')) window.location.reload();
+        };
+        dom.imgInput.onchange = () => { dom.modal.style.display = 'flex'; };
+
+        const toggleSheet = (open) => {
+            dom.sheet.classList.toggle('open', open);
+            document.getElementById('sheetHandle').textContent = open ? 'Fermer' : 'Ouvrir';
+            document.querySelector('.action-bar').classList.toggle('sheet-open', open);
+        };
+        document.getElementById('sheetHandle').onclick = () => toggleSheet(!dom.sheet.classList.contains('open'));
+
+        async function getCoords(addr) {
+            if (geocodeCache.has(addr)) return geocodeCache.get(addr);
+            try {
+                const r = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(addr)}&key=${apiKey}`);
+                const d = await r.json();
+                if (d.results.length > 0) { geocodeCache.set(addr, d.results[0].geometry); return d.results[0].geometry; }
+            } catch (e) { console.error(e); }
+            return null;
+        }
+
+        // Marqueur avec selection/deselection (logique Cainiao)
+        async function createMarker(addr, name, trackingNum = '') {
+            // DOUBLONS: Verifier si trackingNum existe deja (normalise)
+            const trackNorm = (trackingNum || '').trim().toUpperCase();
+            if (trackNorm) {
+                const existing = allMarkers.find(m => (m.custom.trackingNum || '').trim().toUpperCase() === trackNorm);
+                if (existing) {
+                    console.log(`DOUBLON REFUSE (Tracking): ${trackNorm} existe deja`);
+                    return null;
+                }
+            } else {
+                // Si pas de tracking, verifier si NOM + ADRESSE identique existe deja
+                // Cela evite de creer des doublons si l'OCR a rate le tracking sur les deux
+                const nameNorm = name.trim().toLowerCase();
+                const addrNorm = addr.trim().toLowerCase();
+                const existing = allMarkers.find(m =>
+                    m.custom.name.trim().toLowerCase() === nameNorm &&
+                    m.custom.addr.trim().toLowerCase() === addrNorm
+                );
+                if (existing) {
+                    console.log(`DOUBLON REFUSE (Nom+Addr): ${name} a ${addr}`);
+                    return null;
+                }
+            }
+
+            const pos = await getCoords(addr);
+            if (!pos) return null;
+
+            // DOUBLONS: Si meme adresse mais tracking different ou nom different -> AJOUTER (avec petit decalage eventuel)
+            // Leaflet ne bloque pas, mais on peut verifier si on veut un decalage visuel.
+            // Pour l'instant on ajoute directement comme demande.
+
+            // Si coordonnees identiques exactes, on ajoute un mini jitter pour clicker
+            // Si coordonnees identiques exactes, on ajoute un mini jitter pour clicker
+            const jitter = 0.0006 * (Math.random() - 0.5); // Decalage plus grand (env 50m)
+            const finalPos = [pos.lat + jitter, pos.lng + jitter];
+
+            const m = L.marker(finalPos, {
+                icon: L.divIcon({ className: '', html: `<div class="m-inner green"></div>` })
+            }).addTo(map);
+
+            m.bindPopup(`<b>${name}</b>${trackingNum ? '<br><span style="color:#888;">#' + trackingNum + '</span>' : ''}<br>${addr}`);
+            m.custom = { addr, name, pos: { lat: finalPos[0], lng: finalPos[1] }, sel: false, validated: false, trackingNum };
+
+            // Helper to get inner element safely
+            const getInner = () => {
+                const el = m.getElement();
+                return el ? el.querySelector('.m-inner') : null;
+            };
+
+            m.on('click', () => {
+                // Ignorer les marqueurs valides (gris)
+                if (m.custom.validated) return;
+
+                const inner = getInner();
+
+                if (m.custom.sel) {
+                    // DESELECT
+                    m.custom.sel = false;
+                    if (inner) {
+                        inner.classList.remove('red');
+                        inner.classList.add('green');
+                        inner.textContent = '';
+                        inner.style.transform = "scale(1)";
+                    }
+                    const idx = activeMarkers.indexOf(m);
+                    if (idx > -1) {
+                        selectedAddresses.splice(idx, 1);
+                        selectedNamesValues.splice(idx, 1);
+                        activeMarkers.splice(idx, 1);
+                    }
+                    // Renumber remaining
+                    // Recalculer la numerotation
+                    let maxVal = 0;
+                    validatedMarkers.flat().forEach(m => {
+                        const n = (typeof m.custom.globalNum === 'number') ? m.custom.globalNum : 0;
+                        if (n > maxVal) maxVal = n;
+                    });
+
+                    activeMarkers.forEach((marker, i) => {
+                        const markerEl = marker.getElement();
+                        const mi = markerEl ? markerEl.querySelector('.m-inner') : null;
+
+                        const newNum = maxVal + 1 + i;
+                        marker.custom.globalNum = newNum;
+                        if (mi) mi.textContent = newNum;
+                    });
+
+                    globalMarkerCount = maxVal + activeMarkers.length;
+
+                    updateUI();
+                    return;
+                }
+
+                // SELECT
+                // if (selectedAddresses.length >= 8) return alert("Max 8 adresses");
+
+                m.custom.sel = true;
+                globalMarkerCount++;
+                m.custom.globalNum = globalMarkerCount;
+                if (inner) {
+                    inner.classList.remove('green');
+                    inner.classList.add('red');
+                    inner.textContent = globalMarkerCount;
+                    inner.style.transform = "scale(1.2)";
+                }
+                selectedAddresses.push(addr);
+                selectedNamesValues.push(name);
+                activeMarkers.push(m);
+                updateUI();
+                performAutoSave(); // Save after select
+            });
+
+            allMarkers.push(m); // Ajouter a la liste pour la recherche
+            performAutoSave(); // Save after create
+            return m;
+        }
+
+        function updateUI() {
+            const n = selectedAddresses.length;
+            dom.badge.textContent = `${n} / 8`;
+            dom.validate.textContent = `Valider la selection (${n}/8)`;
+            dom.validate.classList.toggle('disabled', n === 0);
+            renderSelectionList();
+            performAutoSave(); // Save UI state
+        }
+
+        function renderSelectionList() {
+            let listDiv = document.getElementById('selectionListDiv');
+            if (!listDiv) {
+                listDiv = document.createElement('div');
+                listDiv.id = 'selectionListDiv';
+                listDiv.className = 'selection-list';
+                dom.listContainer.appendChild(listDiv);
+            }
+            if (selectedAddresses.length === 0) {
+                listDiv.innerHTML = '<p style="color:#666; text-align:center;">Cliquez sur les marqueurs verts pour selectionner</p>';
+                return;
+            }
+            listDiv.innerHTML = activeMarkers.map((m, i) => `
+                <div class="selection-card">
+                    <div class="num">${m.custom.globalNum || (i + 1)}</div>
+                    <div class="info">
+                        <div class="name">${m.custom.name}${m.custom.trackingNum ? ' <span style="color:#666;">#' + m.custom.trackingNum + '</span>' : ''}</div>
+                        <div class="addr">${m.custom.addr}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- OCR (OCR.space API + Tesseract fallback) ---
+        dom.startOcr.onclick = async () => {
+            console.log(`\n========================================`);
+            console.log(`>>> MODE: ${platform}`);
+            console.log(`========================================`);
+
+            dom.modal.style.display = 'none';
+
+            // CLEANUP si pas en mode ajout
+            if (!isAppending) {
+                activeMarkers.forEach(m => map.removeLayer(m));
+                allMarkers.forEach(m => map.removeLayer(m));
+                allMarkers = []; activeMarkers = []; selectedAddresses = []; selectedNamesValues = [];
+                validatedMarkers = []; selectedGroups = [];
+                globalMarkerCount = 0;
+                dom.tbody.innerHTML = '';
+            }
+
+            let foundCount = 0;
+            detectedZip = ""; detectedCity = "";
+
+            let statusDiv = document.getElementById('ocrStatus');
+            if (!statusDiv) {
+                statusDiv = document.createElement('div');
+                statusDiv.id = 'ocrStatus';
+                statusDiv.style.cssText = "position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:rgba(0,0,0,0.9); padding:20px; border-radius:10px; z-index:2000; color:white; text-align:center; min-width:300px;";
+                document.body.appendChild(statusDiv);
+            }
+            statusDiv.style.display = 'block';
+
+            // Helper pour ZIP (Cainiao)
+            const findZipInText = (text) => {
+                const m1 = text.match(/(\d{5})\s*[,.]?\s*(Villejuif|Paris|Vitry|Ivry|Kremlin|Cachan|Arcueil|Gentilly|Fresnes|Thiais|Orly|Choisy|Montrouge)/i);
+                if (m1) return { zip: m1[1], city: m1[2] };
+                const m2 = text.match(/\b(75|77|78|91|92|93|94|95)\d{3}\b/);
+                if (m2) {
+                    const dm = { '94': 'Val-de-Marne', '75': 'Paris', '92': 'Hauts-de-Seine', '93': 'Seine-Saint-Denis', '91': 'Essonne' };
+                    return { zip: m2[0], city: dm[m2[0].substring(0, 2)] || 'Ile-de-France' };
+                }
+                return null;
+            };
+
+            for (const file of dom.imgInput.files) {
+                let text = "";
+
+                // PRIMARY: OCR.space API
+                console.log(`\n========================================`);
+                console.log(`>>> MOTEUR OCR: OCR.space API`);
+                console.log(`========================================`);
+                statusDiv.innerHTML = "OCR.space API en cours...";
+
+                try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('language', 'fre');
+                    formData.append('isOverlayRequired', 'false');
+                    formData.append('OCREngine', '2');
+
+                    const response = await fetch('https://api.ocr.space/parse/image', {
+                        method: 'POST',
+                        headers: { 'apikey': 'K85674568488957' },
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    if (result.ParsedResults && result.ParsedResults[0]) {
+                        text = result.ParsedResults[0].ParsedText;
+                        console.log(">>> OCR.space - SUCCES!");
+                        console.log("--- TEXTE DETECTE ---");
+                        console.log(text);
+                        console.log("---------------------");
+                    }
+                } catch (e) {
+                    console.log("OCR.space API error:", e);
+                }
+
+                // FALLBACK: Tesseract
+                if (!text || text.trim().length < 10) {
+                    console.log(`\n========================================`);
+                    console.log(`>>> MOTEUR OCR: Tesseract (fallback)`);
+                    console.log(`========================================`);
+                    statusDiv.innerHTML = "Fallback Tesseract...";
+
+                    const result = await Tesseract.recognize(file, 'fra+eng', {
+                        logger: m => {
+                            if (m.status === 'recognizing text') {
+                                statusDiv.innerHTML = `Tesseract: ${Math.round(m.progress * 100)}%`;
+                            }
+                        }
+                    });
+                    text = result.data.text;
+                    console.log(">>> Tesseract RESULT:");
+                    console.log(text);
+                }
+
+                statusDiv.innerHTML = "Extraction des adresses...";
+                const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
+                console.log("--- RAW LINES ---");
+                lines.forEach((l, i) => console.log(`${i}: ${l}`));
+
+                // MODE CAINIAO
+                if (platform === 'Cainiao') {
+                    // Detect ZIP
+                    const zipFound = findZipInText(text);
+                    if (zipFound) {
+                        detectedZip = zipFound.zip;
+                        detectedCity = zipFound.city;
+                        console.log(`>>> ZIP detecte: ${detectedZip} ${detectedCity}`);
+                    } else {
+                        const userZip = prompt("Code postal non detecte.\nEntrez le code postal (ex: 94800):", "");
+                        if (userZip?.match(/^\d{5}$/)) {
+                            detectedZip = userZip;
+                            const dm = { '94': 'Val-de-Marne', '75': 'Paris', '92': 'Hauts-de-Seine' };
+                            detectedCity = dm[userZip.substring(0, 2)] || 'France';
+                        } else {
+                            alert("Analyse annulee");
+                            statusDiv.style.display = 'none';
+                            return;
+                        }
+                    }
+
+                    statusDiv.innerHTML = `Zone: ${detectedZip} ${detectedCity}<br>Extraction...`;
+
+                    // Set pour éviter de réutiliser le même tracking pour plusieurs adresses
+                    const usedTrackingNumbers = new Set();
+
+                    for (let i = 0; i < lines.length; i++) {
+                        const lineLower = lines[i].toLowerCase();
+                        if (addressKeywords.some(kw => lineLower.includes(kw))) {
+                            let rawAddress = lines[i];
+                            let tokens = rawAddress.split(/\s+/);
+
+                            // Nettoyer les tokens de bruit (symboles, caractères isolés)
+                            // MAIS préserver les numéros de rue (1-4 chiffres)
+                            const isNoise = (t) => {
+                                // Ne pas supprimer les numéros de rue (1-4 chiffres, avec ou sans lettre)
+                                if (/^\d{1,4}[a-zA-Z]?$/.test(t)) return false;
+                                // Supprimer les tokens très courts ou caractères spéciaux
+                                return t.length <= 1 || /^[@OoQq]+$/.test(t) || /^[^\w]+$/.test(t);
+                            };
+
+                            // Supprimer le bruit à la fin (max 2 tokens)
+                            if (tokens.length > 2 && isNoise(tokens[tokens.length - 1])) tokens.pop();
+                            if (tokens.length > 2 && isNoise(tokens[tokens.length - 1])) tokens.pop();
+
+                            rawAddress = tokens.join(' ').replace(/[@]/g, '').trim();
+
+                            // Détecter le numéro de rue à la fin et le déplacer au début
+                            // Format: "Rue de Chevilly 70" -> "70 Rue de Chevilly"
+                            // Format: "Avenue Karl Marx 71" -> "71 Avenue Karl Marx"
+                            const numAtEnd = rawAddress.match(/^(.+?)\s+(\d{1,4}[a-zA-Z]?)$/);
+                            if (numAtEnd) {
+                                const streetPart = numAtEnd[1].trim();
+                                const numPart = numAtEnd[2];
+                                // Vérifier que la partie rue contient bien un mot-clé d'adresse
+                                if (addressKeywords.some(kw => streetPart.toLowerCase().includes(kw))) {
+                                    rawAddress = `${numPart} ${streetPart}`;
+                                    console.log(`>>> Adresse inversee: ${numPart} ${streetPart}`);
+                                }
+                            }
+
+                            const fullAddress = `${rawAddress}, ${detectedZip} ${detectedCity}, France`;
+
+                            // Find name and tracking number
+                            let name = "Client";
+                            let trackingNum = '';
+                            let fullTrackingNum = ''; // Pour la déduplication
+
+                            // Look for tracking number - Cainiao specific formats
+                            // Cainiao tracking: starts with CN/DO/LO/CO + FR/etc, ends with HD
+                            // Example: CNFR9010433402324HD, DOFR9010020046070HD
+                            for (let j = -5; j <= 8 && (i + j) < lines.length && (i + j) >= 0; j++) {
+                                const candidate = lines[i + j];
+
+                                // Priority 1: Match Cainiao format (CN/DO/LO/CO + country code + numbers + HD)
+                                const cainiaoMatch = candidate.match(/\b(CN|DO|LO|CO|TF)[A-Z]{0,2}\d{10,}[A-Z0-9]{2,4}HD\b/i);
+                                if (cainiaoMatch && !usedTrackingNumbers.has(cainiaoMatch[0].toUpperCase())) {
+                                    fullTrackingNum = cainiaoMatch[0].toUpperCase();
+                                    trackingNum = cainiaoMatch[0].slice(-4); // Last 4 chars (e.g., "81HD")
+                                    console.log(`>>> Tracking Cainiao trouve: ${cainiaoMatch[0]} -> ${trackingNum}`);
+                                    break;
+                                }
+
+                                // Priority 2: Match any string ending with HD (common Cainiao pattern)
+                                const hdMatch = candidate.match(/\b[A-Z0-9]{12,}HD\b/i);
+                                if (hdMatch && !usedTrackingNumbers.has(hdMatch[0].toUpperCase())) {
+                                    fullTrackingNum = hdMatch[0].toUpperCase();
+                                    trackingNum = hdMatch[0].slice(-4);
+                                    console.log(`>>> Tracking HD trouve: ${hdMatch[0]} -> ${trackingNum}`);
+                                    break;
+                                }
+
+                                // Priority 3: Match CN/DO/LO prefix patterns without HD suffix
+                                const prefixMatch = candidate.match(/\b(CN|DO|LO|CO)[A-Z]{0,2}\d{10,}\b/i);
+                                if (prefixMatch && !usedTrackingNumbers.has(prefixMatch[0].toUpperCase())) {
+                                    fullTrackingNum = prefixMatch[0].toUpperCase();
+                                    trackingNum = prefixMatch[0].slice(-4);
+                                    console.log(`>>> Tracking prefix trouve: ${prefixMatch[0]} -> ${trackingNum}`);
+                                    break;
+                                }
+                            }
+
+                            // Marquer ce tracking comme utilisé
+                            if (fullTrackingNum) {
+                                usedTrackingNumbers.add(fullTrackingNum);
+                            }
+
+                            // Find name (bullet point or pattern)
+                            for (let j = 1; j <= 5 && (i + j) < lines.length; j++) {
+                                const candidate = lines[i + j];
+                                if (candidate.startsWith('\u2022') || candidate.startsWith('&') || candidate.startsWith('*')) {
+                                    name = candidate.replace(/^[\u2022&*]\s*/, '').replace(/\s*\d+\s*$/, '').trim();
+                                    if (name.length > 2) break;
+                                }
+                                if (candidate.match(/^[A-Z][a-z]+\s+[A-Z]{2,}/)) {
+                                    name = candidate.replace(/\s*\d+\s*$/, '').trim();
+                                    if (name.length > 2) break;
+                                }
+                            }
+
+                            console.log(`>>> FOUND: "${fullAddress}" | Client: "${name}" | Tracking: ${trackingNum}`);
+                            await createMarker(fullAddress, name, trackingNum);
+                            foundCount++;
+                        }
+                    }
+                }
+                // MODE TSF
+                else {
+                    for (let i = 0; i < lines.length; i++) {
+                        let name = "";
+                        let trackingNum = '';
+                        const isRef = refPackKeywords.some(k => lines[i].includes(k));
+                        const match = lines[i].match(fullNameRegex);
+
+                        // Extract tracking number from ref line or context - Generic extraction
+                        // We look for any long string (>5 chars) containing numbers or uppercase letters
+                        // and take the LAST 4 characters.
+                        if (isRef || i === 0 || i === 1) {
+                            // Match alphanumeric strings of at least 6 chars (to avoid short words)
+                            const possibleCodes = lines[i].match(/\b[A-Z0-9]{6,}\b/g);
+                            if (possibleCodes) {
+                                // Take the one that looks most like a tracking code (longest or containing numbers)
+                                const bestCode = possibleCodes.reduce((a, b) => a.length >= b.length ? a : b);
+                                trackingNum = bestCode.slice(-4); // Always take last 4
+                            }
+                        }
+
+                        if (isRef && lines[i + 1]) { name = lines[i + 1]; i++; }
+                        else if (match) { name = match[0]; }
+
+                        if (name) {
+                            for (let j = 1; j <= 3 && (i + j) < lines.length; j++) {
+                                const l = lines[i + j].toLowerCase();
+                                if (l.startsWith('>') || addressKeywords.some(k => l.includes(k))) {
+                                    const clean = lines[i + j].replace(/[">]/g, '').trim();
+                                    console.log(`>>> FOUND: "${clean}" | Client: "${name}" | Tracking: ${trackingNum}`);
+                                    await createMarker(clean, name, trackingNum);
+                                    foundCount++;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            statusDiv.innerHTML = `${foundCount} adresse(s) trouvee(s)!`;
+            setTimeout(() => { statusDiv.style.display = 'none'; }, 2000);
+
+            performAutoSave(); // Save after OCR completion
+
+            const goal = parseInt(dom.expected.value);
+            if (foundCount < goal) alert(`Correlation : ${foundCount}/${goal} trouvees.`);
+            if (foundCount > 0) toggleSheet(false);
+        };
+
+        // CSV
+        dom.csvInput.onchange = (e) => {
+            Papa.parse(e.target.files[0], {
+                header: true,
+                complete: async (res) => {
+                    for (const row of res.data) {
+                        const k = Object.keys(row);
+                        if (k.length < 3) continue;
+                        const a = `${row[k[2]] || ''}, ${row[k[3]] || ''}, ${row[k[4]] || ''}`;
+                        await createMarker(a, row[k[1]] || "Client");
+                    }
+                }
+            });
+        };
+
+        // Validation
+        dom.validate.onclick = () => {
+            if (activeMarkers.length === 0) return;
+
+            // DECOUPAGE EN LOTS DE 8
+            const chunkSize = 8;
+            for (let i = 0; i < activeMarkers.length; i += chunkSize) {
+                const chunkMarkers = activeMarkers.slice(i, i + chunkSize);
+                const chunkGroup = chunkMarkers.map(m => ({ addr: m.custom.addr, name: m.custom.name }));
+
+                selectedGroups.push(chunkGroup);
+
+                let startPoint = detectedZip && detectedCity ? `${detectedZip} ${detectedCity}, France` : "paris, france";
+                const url = `https://www.google.fr/maps/dir/${encodeURIComponent(startPoint)}/` + chunkGroup.map(p => encodeURIComponent(p.addr)).join('/');
+
+                const tr = document.createElement('tr');
+                let html = `<td>${selectedGroups.length}</td><td>`;
+                chunkGroup.forEach(p => {
+                    const num = chunkMarkers.find(mark => mark.custom.addr === p.addr)?.custom.globalNum;
+                    html += `<div style="margin-bottom:8px;"><b>${num}. ${p.name}</b><br><span style="color:#888; font-size:11px;">${p.addr.substring(0, 30)}...</span></div>`;
+                });
+                html += `<a href="${url}" target="_blank">Itineraire Google Maps</a></td>`;
+                tr.innerHTML = html;
+                dom.tbody.appendChild(tr);
+
+                // Passer les marqueurs en gris
+                const validatedGroup = [];
+                chunkMarkers.forEach(m => {
+                    const el = m.getElement();
+                    const inner = el ? el.querySelector('.m-inner') : null;
+                    if (inner) {
+                        inner.classList.remove('red');
+                        inner.classList.add('grey');
+                    }
+                    m.custom.sel = false;
+                    m.custom.validated = true;
+                    m.custom.groupIdx = selectedGroups.length - 1; // Sauvegarde l'index du groupe
+                    validatedGroup.push(m);
+                });
+                validatedMarkers.push(validatedGroup);
+            }
+
+            activeMarkers = []; selectedAddresses = []; selectedNamesValues = [];
+            updateUI();
+
+            dom.undo.classList.remove('hidden'); dom.fusion.classList.remove('hidden');
+            performAutoSave(); // Save after validation
+            toggleSheet(true);
+        };
+
+        dom.fusion.onclick = () => {
+            dom.listContainer.innerHTML = "";
+            const all = selectedGroups.flat();
+            for (let i = 0; i < all.length; i += 8) {
+                const chunk = all.slice(i, i + 8);
+                const url = "https://www.google.fr/maps/dir/Paris,+France/" + chunk.map(p => encodeURIComponent(p.addr)).join('/');
+                const d = document.createElement('div');
+                d.style.cssText = "background:#252525; padding:15px; border-radius:12px; margin-bottom:15px; border-left:4px solid var(--primary)";
+                d.innerHTML = `<strong>Lot ${Math.floor(i / 8) + 1}</strong><br><a href="${url}" style="font-size:11px;">${url}</a>`;
+                dom.listContainer.appendChild(d);
+            }
+            dom.copy.classList.remove('hidden');
+        };
+
+        dom.copy.onclick = () => {
+            const all = selectedGroups.flat();
+            if (!all.length) return alert("Aucun resultat.");
+            let txt = "";
+            for (let i = 0; i < all.length; i += 8) {
+                const chunk = all.slice(i, i + 8);
+                const url = "https://www.google.fr/maps/dir/Paris,+France/" + chunk.map(p => encodeURIComponent(p.addr)).join('/');
+                txt += `Lot ${Math.floor(i / 8) + 1} - ${url}\n`;
+                chunk.forEach((p, idx) => { txt += `${i + idx + 1} - ${p.name} - ${p.addr}\n`; });
+                txt += "\n";
+            }
+            navigator.clipboard.writeText(txt).then(() => alert("Copie!"));
+        };
+
+        dom.undo.onclick = async () => {
+            if (!selectedGroups.length) return;
+            selectedGroups.pop();
+            dom.tbody.removeChild(dom.tbody.lastChild);
+
+            // Restaurer les marqueurs gris en vert
+            const lastValidated = validatedMarkers.pop();
+            if (lastValidated) {
+                lastValidated.forEach(m => {
+                    const el = m.getElement();
+                    const inner = el ? el.querySelector('.m-inner') : null;
+                    if (inner) {
+                        inner.classList.remove('grey');
+                        inner.classList.add('green');
+                        inner.textContent = '';
+                    }
+                    m.custom.validated = false;
+                });
+            }
+
+
+
+            updateUI();
+            if (!dom.tbody.children.length) {
+                dom.undo.classList.add('hidden');
+                dom.fusion.classList.add('hidden');
+                dom.copy.classList.add('hidden');
+                dom.listContainer.innerHTML = '';
+            }
+
+            // RECALCULER globalMarkerCount
+            // On cherche le plus grand globalNum parmi les groupes validés restants
+            let maxNum = 0;
+            validatedMarkers.flat().forEach(m => {
+                const n = m.custom.globalNum || 0;
+                if (n > maxNum) maxNum = n;
+            });
+            globalMarkerCount = maxNum;
+
+            toggleSheet(false);
+            performAutoSave(); // Save after undo
+        };
+
+        // --- RECHERCHE ---
+        const searchModal = document.getElementById('searchModal');
+        const searchInput = document.getElementById('searchInput');
+        const searchResults = document.getElementById('searchResults');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchClose = document.getElementById('searchClose');
+
+        searchBtn.onclick = () => {
+            searchModal.classList.add('active');
+            searchInput.focus();
+            searchInput.value = '';
+            searchResults.innerHTML = '<p style="color:#666; text-align:center;">Entrez les 4 derniers chiffres</p>';
+        };
+
+        searchClose.onclick = () => {
+            searchModal.classList.remove('active');
+        };
+
+        searchInput.oninput = () => {
+            const query = searchInput.value.trim();
+            if (query.length < 1) {
+                searchResults.innerHTML = '<p style="color:#666; text-align:center;">Entrez les 4 derniers chiffres</p>';
+                return;
+            }
+
+            const results = allMarkers.filter(m => {
+                const name = m.custom.name.toLowerCase();
+                const track = (m.custom.trackingNum || '').toLowerCase();
+                // Recherche uniquement par NOM ou NUMERO DE COLIS
+                return name.includes(query) || track.includes(query);
+            });
+
+            if (results.length === 0) {
+                searchResults.innerHTML = '<p style="color:#666; text-align:center;">Aucun resultat</p>';
+                return;
+            }
+
+            searchResults.innerHTML = results.map((m, i) => `
+                <div class="search-result-item" data-index="${i}">
+                    <div style="font-weight:bold; color:white;">
+                        ${m.custom.name} 
+                        ${m.custom.sel && !m.custom.validated ? `<span style="background:#ef4444; color:white; padding:4px 8px; border-radius:4px; font-size:14px; margin-left:8px;">#${m.custom.globalNum}</span>` : ''}
+                    </div>
+                    <div style="color:#888; font-size:12px;">${m.custom.addr}</div>
+                    <div style="color:${m.custom.validated ? '#666' : (m.custom.sel ? '#ef4444' : '#22c55e')}; font-size:14px; margin-top:5px;">
+                        ${m.custom.validated ? 'Valide' : (m.custom.sel ? `Selectionne (#${m.custom.globalNum})` : 'Disponible')}
+                    </div>
+                </div>
+            `).join('');
+
+            // Click sur un resultat = zoom sur le marqueur
+            searchResults.querySelectorAll('.search-result-item').forEach((el, i) => {
+                el.onclick = () => {
+                    const m = results[i];
+                    map.setView([m.custom.pos.lat, m.custom.pos.lng], 16);
+                    m.openPopup();
+                    searchModal.classList.remove('active');
+                };
+            });
+        };
+
+        // --- SAUVEGARDE (sans requetes API) ---
+        const saveModal = document.getElementById('saveModal');
+        const saveList = document.getElementById('saveList');
+        const saveBtn = document.getElementById('saveButton');
+        const saveClose = document.getElementById('saveClose');
+        const saveCurrentBtn = document.getElementById('saveCurrentBtn');
+
+        function getSaves() {
+            try {
+                return JSON.parse(localStorage.getItem('routeBuilderSaves') || '[]');
+            } catch { return []; }
+        }
+
+        function setSaves(saves) {
+            localStorage.setItem('routeBuilderSaves', JSON.stringify(saves));
+            updateSaveIcon();
+        }
+
+        function updateSaveIcon() {
+            const saves = getSaves();
+            saveBtn.classList.toggle('has-saves', saves.length > 0);
+        }
+
+        function renderSaveList() {
+            const saves = getSaves();
+            if (saves.length === 0) {
+                saveList.innerHTML = '<p style="color:#666; text-align:center;">Aucune sauvegarde</p>';
+                return;
+            }
+            saveList.innerHTML = saves.map((s, i) => `
+                <div class="save-item">
+                    <div class="save-item-info">
+                        <div style="font-weight:bold; color:white;">${s.name}</div>
+                        <div style="color:#888; font-size:12px;">${s.date}</div>
+                        <div style="color:#666; font-size:11px;">${s.markers.length} marqueurs</div>
+                    </div>
+                    <div class="save-item-actions">
+                        <button class="btn-restore" data-index="${i}">Restaurer</button>
+                        <button class="btn-delete" data-index="${i}">X</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Event handlers
+            saveList.querySelectorAll('.btn-restore').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    restoreSave(parseInt(btn.dataset.index));
+                };
+            });
+            saveList.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteSave(parseInt(btn.dataset.index));
+                };
+            });
+        }
+
+        function saveCurrentSession() {
+            // Identifier le groupe de chaque marqueur
+            const markerGroupIndices = new Map();
+            validatedMarkers.forEach((group, groupIdx) => {
+                group.forEach(m => {
+                    // On utilise l'adresse comme clÃ© unique ou une ref
+                    markerGroupIndices.set(m, groupIdx);
+                });
+            });
+
+            const markerData = allMarkers.map(m => ({
+                addr: m.custom.addr,
+                name: m.custom.name,
+                lat: m.custom.pos.lat,
+                lng: m.custom.pos.lng,
+                sel: m.custom.sel,
+                validated: m.custom.validated,
+                globalNum: m.custom.globalNum || 0,
+                trackingNum: m.custom.trackingNum || '',
+                groupIdx: markerGroupIndices.has(m) ? markerGroupIndices.get(m) : -1
+            }));
+
+            if (markerData.length === 0) {
+                alert('Aucun marqueur a sauvegarder');
+                return;
+            }
+
+            const name = prompt('Nom de la sauvegarde:', `Session ${new Date().toLocaleDateString()}`);
+            if (!name) return;
+
+            const saves = getSaves();
+            saves.push({
+                name,
+                date: new Date().toLocaleString(),
+                markers: markerData,
+                selectedGroups: selectedGroups, // Sauvegarder les groupes de donnees
+                globalCount: globalMarkerCount,
+                zip: detectedZip,
+                city: detectedCity
+            });
+            setSaves(saves);
+            renderSaveList();
+            alert('Sauvegarde effectuee!');
+        }
+
+        function restoreSave(index) {
+            const saves = getSaves();
+            const save = saves[index];
+            if (!save) return;
+
+            // Supprimer les marqueurs actuels
+            allMarkers.forEach(m => map.removeLayer(m));
+            allMarkers = [];
+            activeMarkers = [];
+            selectedAddresses = [];
+            selectedNamesValues = [];
+            validatedMarkers = [];
+            selectedGroups = [];
+            // Restaurer les variables globales
+            globalMarkerCount = save.globalCount || 0;
+            detectedZip = save.zip || '';
+            detectedCity = save.city || '';
+            selectedGroups = save.selectedGroups || [];
+
+            // Reinitialiser l'UI du tableau
+            dom.tbody.innerHTML = '';
+
+            // Reconstruire le tableau si des groupes existent
+            if (selectedGroups.length > 0) {
+                let tempCount = 1; // Recalculer le compteur global d'affichage pour le tableau
+                selectedGroups.forEach((group, i) => {
+                    let startPoint = detectedZip && detectedCity ? `${detectedZip} ${detectedCity}, France` : "paris, france";
+                    const url = `https://www.google.fr/maps/dir/${encodeURIComponent(startPoint)}/` + group.map(p => encodeURIComponent(p.addr)).join('/');
+
+                    const tr = document.createElement('tr');
+                    let html = `<td>${i + 1}</td><td>`;
+                    group.forEach(p => {
+                        html += `<div style="margin-bottom:8px;"><b>${tempCount}. ${p.name}</b><br><span style="color:#888; font-size:11px;">${p.addr.substring(0, 30)}...</span></div>`;
+                        tempCount++;
+                    });
+                    html += `<a href="${url}" target="_blank">Itineraire Google Maps</a></td>`;
+                    tr.innerHTML = html;
+                    dom.tbody.appendChild(tr);
+                });
+                countPeople = tempCount; // Restaurer le compteur pour les prochains ajouts
+
+                // Afficher les boutons
+                dom.undo.classList.remove('hidden');
+                dom.fusion.classList.remove('hidden');
+                dom.copy.classList.remove('hidden');
+                toggleSheet(true);
+            }
+
+            // Preparer validatedMarkers avec des tableaux vides pour chaque groupe
+            validatedMarkers = new Array(selectedGroups.length).fill(null).map(() => []);
+
+            // Recreer les marqueurs SANS appel API (on a deja les coords)
+            save.markers.forEach(data => {
+                const m = L.marker([data.lat, data.lng], {
+                    icon: L.divIcon({
+                        className: '',
+                        html: `<div class="m-inner ${data.validated ? 'grey' : (data.sel ? 'red' : 'green')}">${data.globalNum || ''}</div>`
+                    })
+                }).addTo(map);
+
+                m.bindPopup(`<b>${data.name}</b>${data.trackingNum ? '<br><span style=\"color:#888;\">#' + data.trackingNum + '</span>' : ''}<br>${data.addr}`);
+                m.custom = {
+                    addr: data.addr,
+                    name: data.name,
+                    pos: { lat: data.lat, lng: data.lng },
+                    sel: data.sel,
+                    validated: data.validated,
+                    globalNum: data.globalNum,
+                    trackingNum: data.trackingNum || ''
+                };
+
+                // Ajouter le click handler
+                const getInner = () => {
+                    const el = m.getElement();
+                    return el ? el.querySelector('.m-inner') : null;
+                };
+
+                m.on('click', () => {
+                    if (m.custom.validated) return;
+                    const inner = getInner();
+
+                    if (m.custom.sel) {
+                        m.custom.sel = false;
+                        if (inner) {
+                            inner.classList.remove('red');
+                            inner.classList.add('green');
+                            inner.textContent = '';
+                            inner.style.transform = "scale(1)";
+                        }
+                        const idx = activeMarkers.indexOf(m);
+                        if (idx > -1) {
+                            selectedAddresses.splice(idx, 1);
+                            selectedNamesValues.splice(idx, 1);
+                            activeMarkers.splice(idx, 1);
+                        }
+                        activeMarkers.forEach((marker, i) => {
+                            const mi = marker.getElement()?.querySelector('.m-inner');
+                            if (mi) mi.textContent = marker.custom.globalNum || (i + 1);
+                        });
+                        updateUI();
+                        return;
+                    }
+
+                    // if (selectedAddresses.length >= 8) return alert("Max 8 adresses");
+
+                    m.custom.sel = true;
+                    globalMarkerCount++;
+                    m.custom.globalNum = globalMarkerCount;
+                    if (inner) {
+                        inner.classList.remove('green');
+                        inner.classList.add('red');
+                        inner.textContent = globalMarkerCount;
+                        inner.style.transform = "scale(1.2)";
+                    }
+                    selectedAddresses.push(data.addr);
+                    selectedNamesValues.push(data.name);
+                    activeMarkers.push(m);
+                    updateUI();
+                });
+
+                allMarkers.push(m);
+
+                if (data.sel && !data.validated) {
+                    activeMarkers.push(m);
+                    selectedAddresses.push(data.addr);
+                    selectedNamesValues.push(data.name);
+                }
+
+                // Restaurer dans le groupe validÃ© correspondant
+                if (data.validated && data.groupIdx !== undefined && data.groupIdx > -1) {
+                    if (validatedMarkers[data.groupIdx]) {
+                        validatedMarkers[data.groupIdx].push(m);
+                    }
+                }
+            });
+
+            // Zoom sur tous les marqueurs
+            if (allMarkers.length > 0) {
+                const group = L.featureGroup(allMarkers);
+                map.fitBounds(group.getBounds().pad(0.1));
+            }
+
+            updateUI();
+            saveModal.classList.remove('active');
+            alert('Session restauree! (' + save.markers.length + ' marqueurs)');
+        }
+
+        function deleteSave(index) {
+            if (!confirm('Supprimer cette sauvegarde?')) return;
+            const saves = getSaves();
+            saves.splice(index, 1);
+            setSaves(saves);
+            renderSaveList();
+        }
+
+        saveBtn.onclick = () => {
+            saveModal.classList.add('active');
+            renderSaveList();
+        };
+
+        saveClose.onclick = () => {
+            saveModal.classList.remove('active');
+        };
+
+        saveCurrentBtn.onclick = saveCurrentSession;
+
+        // Sauvegarde auto function
+        function performAutoSave() {
+            if (allMarkers.length > 0) {
+                // Identifier le groupe de chaque marqueur
+                const markerGroupIndices = new Map();
+                validatedMarkers.forEach((group, groupIdx) => {
+                    group.forEach(m => markerGroupIndices.set(m, groupIdx));
+                });
+
+                const autoSave = {
+                    name: 'Auto-save',
+                    date: new Date().toLocaleString(),
+                    markers: allMarkers.map(m => ({
+                        addr: m.custom.addr,
+                        name: m.custom.name,
+                        lat: m.custom.pos.lat,
+                        lng: m.custom.pos.lng,
+                        sel: m.custom.sel,
+                        validated: m.custom.validated,
+                        globalNum: m.custom.globalNum || 0,
+                        trackingNum: m.custom.trackingNum || '',
+                        groupIdx: markerGroupIndices.has(m) ? markerGroupIndices.get(m) : -1
+                    })),
+                    selectedGroups: selectedGroups,
+                    globalCount: globalMarkerCount,
+                    zip: detectedZip,
+                    city: detectedCity
+                };
+                const saves = getSaves();
+                const autoIndex = saves.findIndex(s => s.name === 'Auto-save');
+                if (autoIndex > -1) saves[autoIndex] = autoSave;
+                else saves.unshift(autoSave);
+                setSaves(saves);
+            }
+        }
+
+        // Sauvegarde auto avant de quitter (backup)
+        window.addEventListener('beforeunload', performAutoSave);
+
+        // --- SCANNER LOGIC ---
+        const scanInSearchBtn = document.getElementById('scanInSearchBtn');
+        let html5QrcodeScanner = null;
+
+        if (scanInSearchBtn) {
+            scanInSearchBtn.onclick = () => {
+                if (typeof Html5Qrcode === 'undefined') {
+                    alert('Erreur: Librairie Scanner non chargee.');
+                    return;
+                }
+                const scannerUi = document.getElementById('scannerModal');
+                scannerUi.classList.add('active');
+
+                setTimeout(() => {
+                    if (html5QrcodeScanner) {
+                        try { html5QrcodeScanner.clear(); } catch (e) { }
+                    }
+                    html5QrcodeScanner = new Html5Qrcode("reader");
+                    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+                    html5QrcodeScanner.start({ facingMode: "environment" }, config, (decodedText) => {
+                        console.log(`Scan result: ${decodedText}`);
+                        html5QrcodeScanner.stop().then(() => {
+                            html5QrcodeScanner.clear();
+                            scannerUi.classList.remove('active');
+                            searchInput.value = decodedText;
+                            searchInput.dispatchEvent(new Event('input'));
+                        }).catch(err => console.error(err));
+                    }).catch(err => {
+                        console.error(err);
+                        alert("Erreur camera: " + err);
+                        scannerUi.classList.remove('active');
+                    });
+                }, 300);
+            };
+        }
+
+        const scannerClose = document.getElementById('scannerClose');
+        if (scannerClose) {
+            scannerClose.onclick = () => {
+                const scannerUi = document.getElementById('scannerModal');
+                if (html5QrcodeScanner) {
+                    html5QrcodeScanner.stop().then(() => {
+                        html5QrcodeScanner.clear();
+                        scannerUi.classList.remove('active');
+                    }).catch(() => {
+                        scannerUi.classList.remove('active');
+                    });
+                } else {
+                    scannerUi.classList.remove('active');
+                }
+            };
+        }
+
+        // Init
+        updateSaveIcon();
+    </script>
+</body>
+
+</html>
