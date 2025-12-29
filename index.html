@@ -605,7 +605,7 @@
     <script>
         const apiKey = 'de012302a8b6464691dbd1df48f474fe';
         const map = L.map('map', { zoomControl: false }).setView([48.8566, 2.3522], 12);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
 
         const geocodeCache = new Map();
         let selectedAddresses = [], selectedNamesValues = [], activeMarkers = [], selectedGroups = [];
