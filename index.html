@@ -2046,7 +2046,8 @@
                         try { html5QrcodeScanner.clear(); } catch (e) { }
                     }
                     html5QrcodeScanner = new Html5Qrcode("reader");
-                    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+                    // Config modifiee pour une "largeur" (rectanble) plutot qu'un carre, mieux pour les codes barres longs
+                    const config = { fps: 10, qrbox: { width: 480, height: 100 } };
 
                     html5QrcodeScanner.start({ facingMode: "environment" }, config, (decodedText) => {
                         console.log(`Scan result: ${decodedText}`);
