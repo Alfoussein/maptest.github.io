@@ -57,6 +57,30 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
             display: flex;
             gap: 5px;
+            align-items: center;
+            /* Center items vertically */
+            padding-right: 10px;
+            /* Space for the buttons on right */
+        }
+
+        .header-restart-btn {
+            position: absolute;
+            left: 20px;
+            /* Position left of the centered header */
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--surface);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
         }
 
         .pill-nav button {
@@ -90,8 +114,7 @@
 
         .control-icon {
             position: absolute;
-            top: 80px;
-            left: 15px;
+            right: 15px;
             z-index: 10;
             background: var(--surface);
             width: 40px;
@@ -103,6 +126,87 @@
             cursor: pointer;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             font-size: 20px;
+        }
+
+        /* Specific positioning for right-side controls */
+        #selectionBadge {
+            top: 80px;
+            right: 15px;
+        }
+
+        #saveButton {
+            top: 130px;
+            /* Below Badge */
+            right: 15px;
+        }
+
+        #manualAddBtn {
+            top: 180px;
+            /* Below Save */
+            right: 15px;
+        }
+
+        /* Stacked below save */
+        #warningButton {
+            top: 130px;
+            /* Aligned with Save */
+            right: 70px;
+            /* Left of Save */
+        }
+
+        /* Left of save */
+
+        .side-drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 60%;
+            /* Half screen roughly */
+            max-width: 300px;
+            background: var(--surface);
+            z-index: 200;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .side-drawer.open {
+            transform: translateX(0);
+        }
+
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 199;
+            display: none;
+        }
+
+        .drawer-overlay.open {
+            display: block;
+        }
+
+        .drawer-btn {
+            background: #333;
+            color: white;
+            padding: 15px;
+            border: 1px solid #444;
+            border-radius: 12px;
+            text-align: left;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .drawer-btn:active {
+            background: #444;
         }
 
         .bottom-sheet {
@@ -217,7 +321,7 @@
 
         .action-bar {
             position: absolute;
-            bottom: 52px;
+            bottom: 76px;
             left: 15px;
             right: 15px;
             z-index: 30;
@@ -225,7 +329,7 @@
         }
 
         .action-bar.sheet-open {
-            bottom: calc(75% - 80px);
+            bottom: calc(55% - 80px);
             /* Ajuste pour etre plus bas, plus proche du handle */
         }
 
@@ -305,11 +409,10 @@
             background: #2a2a2a;
         }
 
-        /* Save Icon */
         .save-icon {
+            /* Now handled by specific ID styling above, keeping basic class style */
             position: absolute;
-            top: 80px;
-            right: 70px;
+            /* top/right set by ID */
             z-index: 10;
             background: var(--surface);
             width: 40px;
@@ -559,22 +662,31 @@
     </div>
 
     <header class="floating-header">
+        <!-- Restart Button Outside Pill Nav, Left Aligned -->
+        <button id="headerRestartBtn" class="header-restart-btn" title="Tout effacer">🔄</button>
+
         <div class="pill-nav">
-            <button id="tsfButton">TSF (OCR)</button>
-            <button id="tsfTextButton">TSF texte</button>
-            <button id="otherButton">Other (CSV)</button>
-            <button id="cainiaoButton">Cainiao</button>
-            <button id="cainiaoTextButton">Cainiao texte</button>
-            <button id="addImgBtn" title="Ajouter des images" style="padding: 10px 15px; font-size: 18px;">+</button>
+            <button id="tsfButton">TSF OCR</button>
+            <button id="cainiaoButton">Cainiao OCR</button>
+            <button id="addImgBtn" title="Menu" style="padding: 10px 15px; font-size: 18px;">+</button>
         </div>
     </header>
+
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+    <div class="side-drawer" id="sideDrawer">
+        <h3 style="margin-top:0;">Menu</h3>
+        <button class="drawer-btn" id="drawerTsfText">📝 TSF Texte</button>
+        <button class="drawer-btn" id="drawerCainiaoText">📝 Cainiao Texte</button>
+        <button class="drawer-btn" id="drawerAddImage">📷 Ajouter Image</button>
+    </div>
 
     <main>
         <div id="map"></div>
         <div id="selectionBadge" class="badge">0 / 8</div>
-        <div id="restartButton" class="control-icon">🔄</div>
+        <!-- Restart moved to header -->
         <div id="saveButton" class="save-icon" title="Sauvegardes">💾</div>
         <div id="warningButton" class="warning-icon" title="Erreurs de lecture">⚠️</div>
+        <div id="manualAddBtn" class="control-icon" title="Ajout manuel">➕</div>
         <input type="file" id="csvFileInput" accept=".csv" hidden />
         <input type="file" id="imageFileInput" accept="image/*" multiple hidden />
         <div id="bottomSheet" class="bottom-sheet">
@@ -647,6 +759,25 @@
         <div id="warningList" class="search-results"></div>
     </div>
 
+    <!-- Manual Add Modal -->
+    <div id="manualAddModal" class="modal">
+        <div class="modal-content" style="text-align:left;">
+            <h3 style="margin-top:0; text-align:center;">Ajout Manuel</h3>
+
+            <label style="color:#888; font-size:12px;">Tracking Number</label>
+            <input type="text" id="manTrack" placeholder="ex: CNFR..." style="margin:5px 0 15px 0; font-size:16px;">
+
+            <label style="color:#888; font-size:12px;">Nom du client</label>
+            <input type="text" id="manName" placeholder="Nom" style="margin:5px 0 15px 0; font-size:16px;">
+
+            <label style="color:#888; font-size:12px;">Adresse complete</label>
+            <input type="text" id="manAddr" placeholder="10 rue de..." style="margin:5px 0 15px 0; font-size:16px;">
+
+            <button id="manValidateBtn" class="btn-main">Ajouter le marqueur</button>
+            <button id="manCloseBtn" class="search-close" style="position:absolute; top:15px; right:15px;">X</button>
+        </div>
+    </div>
+
     <script>
         const apiKey = 'de012302a8b6464691dbd1df48f474fe';
         const map = L.map('map', { zoomControl: false }).setView([48.8566, 2.3522], 12);
@@ -667,10 +798,16 @@
 
         const dom = {
             tsf: document.getElementById('tsfButton'),
-            tsfText: document.getElementById('tsfTextButton'),
-            other: document.getElementById('otherButton'),
             cainiao: document.getElementById('cainiaoButton'),
-            cainiaoText: document.getElementById('cainiaoTextButton'),
+            // Removed other buttons from DOM object as they don't exist in header anymore
+
+            // Drawer & New Controls
+            restart: document.getElementById('headerRestartBtn'),
+            drawerOverlay: document.getElementById('drawerOverlay'),
+            sideDrawer: document.getElementById('sideDrawer'),
+            drawerTsfText: document.getElementById('drawerTsfText'),
+            drawerCainiaoText: document.getElementById('drawerCainiaoText'),
+            drawerAddImage: document.getElementById('drawerAddImage'),
             imgInput: document.getElementById('imageFileInput'),
             csvInput: document.getElementById('csvFileInput'),
             modal: document.getElementById('correlationModal'),
@@ -698,32 +835,70 @@
         // Navigation - set active button and platform
         function setActiveMode(mode) {
             platform = mode;
-            dom.tsf.classList.toggle('active', mode === 'TSF');
-            dom.tsfText.classList.toggle('active', mode === 'TSF_TEXT');
-            dom.cainiao.classList.toggle('active', mode === 'Cainiao');
-            dom.cainiaoText.classList.toggle('active', mode === 'CAINIAO_TEXT');
-            dom.other.classList.toggle('active', mode === 'CSV');
-            dom.modalTitle.textContent = (mode === 'Cainiao' || mode === 'CAINIAO_TEXT') ? 'Analyse Cainiao' : 'Analyse TSF';
+            // Only toggle the main OCR tabs in the header
+            dom.tsf.classList.toggle('active', mode === 'TSF' || mode === 'TSF_TEXT');
+            dom.cainiao.classList.toggle('active', mode === 'Cainiao' || mode === 'CAINIAO_TEXT');
+
+            // Update titles if needed, though OCR is default
+            dom.modalTitle.textContent = (mode.includes('Cainiao') || mode.includes('CAINIAO')) ? 'Analyse Cainiao' : 'Analyse TSF';
         }
 
+        // Header OCR Buttons
         dom.tsf.onclick = () => { isAppending = false; setActiveMode('TSF'); dom.imgInput.click(); };
-        dom.tsfText.onclick = () => {
+        dom.cainiao.onclick = () => { isAppending = false; setActiveMode('Cainiao'); dom.imgInput.click(); };
+
+        // Drawer Logic
+        function toggleDrawer(open) {
+            dom.sideDrawer.classList.toggle('open', open);
+            dom.drawerOverlay.classList.toggle('open', open);
+        }
+
+        dom.imgInput.onclick = () => toggleDrawer(false); // Close if opening file dialog
+        document.getElementById('addImgBtn').onclick = () => toggleDrawer(true);
+        dom.drawerOverlay.onclick = () => toggleDrawer(false);
+
+        // Drawer Items
+        dom.drawerTsfText.onclick = () => {
+            toggleDrawer(false);
             isAppending = false;
             setActiveMode('TSF_TEXT');
             dom.textModal.style.display = 'flex';
         };
-        dom.closeTextModal.onclick = () => { dom.textModal.style.display = 'none'; };
 
-        dom.cainiao.onclick = () => { isAppending = false; setActiveMode('Cainiao'); dom.imgInput.click(); };
-        dom.cainiaoText.onclick = () => {
+        dom.drawerCainiaoText.onclick = () => {
+            toggleDrawer(false);
             isAppending = false;
             setActiveMode('CAINIAO_TEXT');
             dom.textModal.style.display = 'flex';
         };
 
+        dom.drawerAddImage.onclick = () => {
+            toggleDrawer(false);
+            // Default to TSF for generic image add if no mode selected, or keep current
+            if (!platform) setActiveMode('TSF');
+            isAppending = true;
+            dom.imgInput.click();
+        };
+
+        // Header Restart
+        dom.restart.onclick = () => {
+            if (confirm('Tout effacer ?')) window.location.reload();
+        };
+
+        // Text Modal Logic
+        dom.closeTextModal.onclick = () => { dom.textModal.style.display = 'none'; };
+
         dom.processText.onclick = async () => {
             const text = dom.textArea.value;
             if (!text.trim()) return;
+
+            // Show loading state
+            const originalBtnText = dom.processText.textContent;
+            dom.processText.textContent = "Analyse en cours... (Ne fermez pas)";
+            dom.processText.disabled = true;
+
+            // Wait a small moment for UI to update
+            await new Promise(r => setTimeout(r, 100));
 
             dom.textModal.style.display = 'none';
             // Cleanup if not appending
@@ -746,7 +921,17 @@
                     const line = lines[i];
                     if (line.match(/^Mme\/m/i)) {
                         const name = line.replace(/^Mme\/m\s*/i, '').trim();
-                        const trackingNum = (i > 0) ? lines[i - 1] : "";
+
+                        // FIND TRACKING (Look backwards)
+                        let trackingNum = "";
+                        for (let k = i - 1; k >= Math.max(0, i - 4); k--) {
+                            const candidate = lines[k];
+                            // Skip "SMS clique" (causes duplicates) and "DHL" labels
+                            if (candidate.match(/SMS cliqu/i) || candidate.match(/^DHL$/i) || candidate.length < 5) continue;
+                            trackingNum = candidate;
+                            break;
+                        }
+
                         const addr = (i < lines.length - 1) ? lines[i + 1] : "";
 
                         // Debug checks
@@ -781,7 +966,8 @@
 
                             if (zipCity.match(/^\d{5}/)) {
                                 const fullAddr = `${rawAddr}, ${zipCity}, France`;
-                                const m = await createMarker(fullAddr, name, trackingNum.slice(-4));
+                                // Utilisation du tracking complet comme demande
+                                const m = await createMarker(fullAddr, name, trackingNum);
                                 if (m) foundCount++;
                             } else {
                                 parsingErrors.push({
@@ -821,18 +1007,16 @@
             }
             dom.warningClose.onclick = () => { dom.warningModal.style.display = 'none'; };
 
+
+            // Reset button state
+            dom.processText.textContent = originalBtnText;
+            dom.processText.disabled = false;
+
             alert(`${foundCount} adresses trouvées !`);
             performAutoSave();
         };
-        dom.other.onclick = () => { isAppending = false; setActiveMode('CSV'); dom.csvInput.click(); };
-        document.getElementById('addImgBtn').onclick = () => {
-            if (!platform) return alert("Selectionnez d'abord un mode (TSF/Cainiao)");
-            isAppending = true;
-            dom.imgInput.click();
-        };
-        document.getElementById('restartButton').onclick = () => {
-            if (confirm('Tout effacer ?')) window.location.reload();
-        };
+        // Removed old addImgBtn logic and restartBtn logic here as they are handled above
+
         dom.imgInput.onchange = () => { dom.modal.style.display = 'flex'; };
 
         const toggleSheet = (open) => {
@@ -844,11 +1028,33 @@
 
         async function getCoords(addr) {
             if (geocodeCache.has(addr)) return geocodeCache.get(addr);
+
+            // 1. Essai API Gouvernementale (BAN) - TrÃ¨s prÃ©cis pour la France
             try {
-                const r = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(addr)}&key=${apiKey}`);
+                // Nettoyage basique de l'adresse pour BAN
+                const cleanAddr = addr.replace(/France/i, '').trim();
+                const r = await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(cleanAddr)}&limit=1`);
                 const d = await r.json();
-                if (d.results.length > 0) { geocodeCache.set(addr, d.results[0].geometry); return d.results[0].geometry; }
-            } catch (e) { console.error(e); }
+                if (d.features && d.features.length > 0) {
+                    const coords = d.features[0].geometry.coordinates; // [lon, lat]
+                    const latLng = { lat: coords[1], lng: coords[0] };
+                    geocodeCache.set(addr, latLng);
+                    return latLng;
+                }
+            } catch (e) { console.error("BAN API Error:", e); }
+
+            // 2. Fallback OpenCage
+            try {
+                const bounds = map.getBounds();
+                const bParams = `&bounds=${bounds.getWest()},${bounds.getSouth()},${bounds.getEast()},${bounds.getNorth()}`;
+                const r = await fetch(`https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(addr)}&key=${apiKey}${bParams}&countrycode=fr`);
+                const d = await r.json();
+                if (d.results.length > 0) {
+                    geocodeCache.set(addr, d.results[0].geometry);
+                    return d.results[0].geometry;
+                }
+            } catch (e) { console.error("OpenCage Error:", e); }
+
             return null;
         }
 
@@ -894,6 +1100,7 @@
             }).addTo(map);
 
             m.bindPopup(`<b>${name}</b>${trackingNum ? '<br><span style="color:#888;">#' + trackingNum + '</span>' : ''}<br>${addr}`);
+            // Use passed trackingNum
             m.custom = { addr, name, pos: { lat: finalPos[0], lng: finalPos[1] }, sel: false, validated: false, trackingNum };
 
             // Helper to get inner element safely
@@ -1433,7 +1640,7 @@
         };
 
         searchInput.oninput = () => {
-            const query = searchInput.value.trim();
+            const query = searchInput.value.trim().toLowerCase();
             if (query.length < 1) {
                 searchResults.innerHTML = '<p style="color:#666; text-align:center;">Entrez les 4 derniers chiffres</p>';
                 return;
@@ -1452,25 +1659,63 @@
             }
 
             searchResults.innerHTML = results.map((m, i) => `
-                <div class="search-result-item" data-index="${i}">
-                    <div style="font-weight:bold; color:white;">
+                <div class="search-result-item" data-index="${i}" style="position:relative;">
+                    <div style="font-weight:bold; color:white; padding-right:30px;">
                         ${m.custom.name} 
                         ${m.custom.sel && !m.custom.validated ? `<span style="background:#ef4444; color:white; padding:4px 8px; border-radius:4px; font-size:14px; margin-left:8px;">#${m.custom.globalNum}</span>` : ''}
                     </div>
+                    ${m.custom.trackingNum ? `<div style="color:#4ade80; font-size:12px; font-family:monospace; margin-top:2px;">${m.custom.trackingNum}</div>` : ''}
                     <div style="color:#888; font-size:12px;">${m.custom.addr}</div>
                     <div style="color:${m.custom.validated ? '#666' : (m.custom.sel ? '#ef4444' : '#22c55e')}; font-size:14px; margin-top:5px;">
                         ${m.custom.validated ? 'Valide' : (m.custom.sel ? `Selectionne (#${m.custom.globalNum})` : 'Disponible')}
                     </div>
+                    <button class="delete-marker-btn" data-index="${i}" style="position:absolute; top:10px; right:10px; background:transparent; border:none; color:#ef4444; font-size:18px; cursor:pointer;" title="Supprimer ce colis">🗑️</button>
                 </div>
             `).join('');
 
             // Click sur un resultat = zoom sur le marqueur
             searchResults.querySelectorAll('.search-result-item').forEach((el, i) => {
-                el.onclick = () => {
+                el.onclick = (e) => {
+                    // Ignore click if deleted button was clicked (handled below)
+                    if (e.target.closest('.delete-marker-btn')) return;
+
                     const m = results[i];
                     map.setView([m.custom.pos.lat, m.custom.pos.lng], 16);
                     m.openPopup();
                     searchModal.classList.remove('active');
+                };
+            });
+
+            // Handler Suppression
+            searchResults.querySelectorAll('.delete-marker-btn').forEach((btn) => {
+                btn.onclick = (e) => {
+                    e.stopPropagation(); // Prevent zoom
+                    if (!confirm("Supprimer definitivement ce marqueur ?")) return;
+
+                    const i = parseInt(btn.dataset.index);
+                    const m = results[i];
+
+                    // Remove from map
+                    map.removeLayer(m);
+
+                    // Remove from arrays
+                    const allIdx = allMarkers.indexOf(m);
+                    if (allIdx > -1) allMarkers.splice(allIdx, 1);
+
+                    if (m.custom.sel) {
+                        const activeIdx = activeMarkers.indexOf(m);
+                        if (activeIdx > -1) {
+                            activeMarkers.splice(activeIdx, 1);
+                            selectedAddresses.splice(activeIdx, 1);
+                            selectedNamesValues.splice(activeIdx, 1);
+                        }
+                    }
+
+                    updateUI(); // Renumber and update badge
+                    performAutoSave();
+
+                    // Refresh search
+                    searchInput.dispatchEvent(new Event('input'));
                 };
             });
         };
@@ -1505,7 +1750,7 @@
                 return;
             }
             saveList.innerHTML = saves.map((s, i) => `
-                <div class="save-item">
+                < div class= "save-item" >
                     <div class="save-item-info">
                         <div style="font-weight:bold; color:white;">${s.name}</div>
                         <div style="color:#888; font-size:12px;">${s.date}</div>
@@ -1515,8 +1760,8 @@
                         <button class="btn-restore" data-index="${i}">Restaurer</button>
                         <button class="btn-delete" data-index="${i}">X</button>
                     </div>
-                </div>
-            `).join('');
+                </div >
+                `).join('');
 
             // Event handlers
             saveList.querySelectorAll('.btn-restore').forEach(btn => {
@@ -1861,6 +2106,40 @@
 
         // Init
         updateSaveIcon();
+
+        // --- MANUAL ADD LOGIC ---
+        const manualAddBtn = document.getElementById('manualAddBtn');
+        const manualAddModal = document.getElementById('manualAddModal');
+        const manCloseBtn = document.getElementById('manCloseBtn');
+        const manValidateBtn = document.getElementById('manValidateBtn');
+
+        manualAddBtn.onclick = () => { manualAddModal.style.display = 'flex'; };
+        manCloseBtn.onclick = () => { manualAddModal.style.display = 'none'; };
+
+        manValidateBtn.onclick = async () => {
+            const track = document.getElementById('manTrack').value.trim();
+            const name = document.getElementById('manName').value.trim();
+            const addr = document.getElementById('manAddr').value.trim();
+
+            if (!name || !addr) return alert("Nom et Adresse requis");
+
+            manValidateBtn.textContent = "Geocodage...";
+            const m = await createMarker(addr, name, track);
+            manValidateBtn.textContent = "Ajouter le marqueur";
+
+            if (m) {
+                manualAddModal.style.display = 'none';
+                document.getElementById('manTrack').value = "";
+                document.getElementById('manName').value = "";
+                document.getElementById('manAddr').value = "";
+
+                map.setView([m.custom.pos.lat, m.custom.pos.lng], 16);
+                m.openPopup();
+                // alert("Marqueur ajoute !");
+            } else {
+                alert("Erreur: Adresse introuvable ou doublon.");
+            }
+        };
     </script>
 </body>
 
