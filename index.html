@@ -327,6 +327,27 @@
             background: #22c55e;
         }
 
+        /* Warning Icon */
+        .warning-icon {
+            position: absolute;
+            top: 80px;
+            right: 125px;
+            /* Left of save icon */
+            z-index: 10;
+            background: #eab308;
+            color: black;
+            width: 40px;
+            height: 40px;
+            display: none;
+            /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            font-size: 20px;
+        }
+
         .save-modal {
             position: fixed;
             top: 0;
@@ -525,11 +546,25 @@
         </div>
     </div>
 
+    <div id="textInputModal" class="modal">
+        <div class="modal-content" style="max-width: 500px; width: 90%;">
+            <h3 style="margin-top:0">TSF Texte</h3>
+            <p style="color:#aaa; font-size:14px;">Collez votre texte ici :</p>
+            <textarea id="tsfTextArea" rows="10"
+                style="width:100%; padding:10px; background:#000; color:white; border:1px solid #333; border-radius:12px; resize:vertical; font-size:12px;"></textarea>
+            <button id="processTextBtn" class="btn-main" style="margin-top:15px;">Analyser le texte</button>
+            <button id="closeTextModalBtn" class="search-close"
+                style="position:absolute; top:15px; right:15px;">X</button>
+        </div>
+    </div>
+
     <header class="floating-header">
         <div class="pill-nav">
             <button id="tsfButton">TSF (OCR)</button>
+            <button id="tsfTextButton">TSF texte</button>
             <button id="otherButton">Other (CSV)</button>
             <button id="cainiaoButton">Cainiao</button>
+            <button id="cainiaoTextButton">Cainiao texte</button>
             <button id="addImgBtn" title="Ajouter des images" style="padding: 10px 15px; font-size: 18px;">+</button>
         </div>
     </header>
@@ -539,6 +574,7 @@
         <div id="selectionBadge" class="badge">0 / 8</div>
         <div id="restartButton" class="control-icon">🔄</div>
         <div id="saveButton" class="save-icon" title="Sauvegardes">💾</div>
+        <div id="warningButton" class="warning-icon" title="Erreurs de lecture">⚠️</div>
         <input type="file" id="csvFileInput" accept=".csv" hidden />
         <input type="file" id="imageFileInput" accept="image/*" multiple hidden />
         <div id="bottomSheet" class="bottom-sheet">
@@ -602,6 +638,15 @@
         <div id="reader" style="width:100%; flex:1; background:black;"></div>
     </div>
 
+    <!-- Warning Modal -->
+    <div id="warningModal" class="search-modal" style="z-index:200;">
+        <div class="search-header">
+            <h3 style="margin:0; color:white;">Elements non reconnus</h3>
+            <button id="warningClose" class="search-close">X</button>
+        </div>
+        <div id="warningList" class="search-results"></div>
+    </div>
+
     <script>
         const apiKey = 'de012302a8b6464691dbd1df48f474fe';
         const map = L.map('map', { zoomControl: false }).setView([48.8566, 2.3522], 12);
@@ -622,8 +667,10 @@
 
         const dom = {
             tsf: document.getElementById('tsfButton'),
+            tsfText: document.getElementById('tsfTextButton'),
             other: document.getElementById('otherButton'),
             cainiao: document.getElementById('cainiaoButton'),
+            cainiaoText: document.getElementById('cainiaoTextButton'),
             imgInput: document.getElementById('imageFileInput'),
             csvInput: document.getElementById('csvFileInput'),
             modal: document.getElementById('correlationModal'),
@@ -637,20 +684,146 @@
             undo: document.getElementById('undoBtn'),
             fusion: document.getElementById('fusionBtn'),
             copy: document.getElementById('copyBtn'),
-            listContainer: document.getElementById('addressListContainer')
+            listContainer: document.getElementById('addressListContainer'),
+            textModal: document.getElementById('textInputModal'),
+            textArea: document.getElementById('tsfTextArea'),
+            processText: document.getElementById('processTextBtn'),
+            closeTextModal: document.getElementById('closeTextModalBtn'),
+            warningBtn: document.getElementById('warningButton'),
+            warningModal: document.getElementById('warningModal'),
+            warningList: document.getElementById('warningList'),
+            warningClose: document.getElementById('warningClose')
         };
 
         // Navigation - set active button and platform
         function setActiveMode(mode) {
             platform = mode;
             dom.tsf.classList.toggle('active', mode === 'TSF');
+            dom.tsfText.classList.toggle('active', mode === 'TSF_TEXT');
             dom.cainiao.classList.toggle('active', mode === 'Cainiao');
+            dom.cainiaoText.classList.toggle('active', mode === 'CAINIAO_TEXT');
             dom.other.classList.toggle('active', mode === 'CSV');
-            dom.modalTitle.textContent = mode === 'Cainiao' ? 'Analyse Cainiao' : 'Analyse TSF';
+            dom.modalTitle.textContent = (mode === 'Cainiao' || mode === 'CAINIAO_TEXT') ? 'Analyse Cainiao' : 'Analyse TSF';
         }
 
         dom.tsf.onclick = () => { isAppending = false; setActiveMode('TSF'); dom.imgInput.click(); };
+        dom.tsfText.onclick = () => {
+            isAppending = false;
+            setActiveMode('TSF_TEXT');
+            dom.textModal.style.display = 'flex';
+        };
+        dom.closeTextModal.onclick = () => { dom.textModal.style.display = 'none'; };
+
         dom.cainiao.onclick = () => { isAppending = false; setActiveMode('Cainiao'); dom.imgInput.click(); };
+        dom.cainiaoText.onclick = () => {
+            isAppending = false;
+            setActiveMode('CAINIAO_TEXT');
+            dom.textModal.style.display = 'flex';
+        };
+
+        dom.processText.onclick = async () => {
+            const text = dom.textArea.value;
+            if (!text.trim()) return;
+
+            dom.textModal.style.display = 'none';
+            // Cleanup if not appending
+            if (!isAppending) {
+                activeMarkers.forEach(m => map.removeLayer(m));
+                allMarkers.forEach(m => map.removeLayer(m));
+                allMarkers = []; activeMarkers = []; selectedAddresses = []; selectedNamesValues = [];
+                validatedMarkers = []; selectedGroups = [];
+                globalMarkerCount = 0;
+                dom.tbody.innerHTML = '';
+            }
+
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+            let foundCount = 0;
+            let parsingErrors = []; // Capture errors
+
+            // LOGIC TSF TEXT
+            if (platform === 'TSF_TEXT') {
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    if (line.match(/^Mme\/m/i)) {
+                        const name = line.replace(/^Mme\/m\s*/i, '').trim();
+                        const trackingNum = (i > 0) ? lines[i - 1] : "";
+                        const addr = (i < lines.length - 1) ? lines[i + 1] : "";
+
+                        // Debug checks
+                        if (!addr || addr.length < 5) { // Simple heuristic
+                            parsingErrors.push({
+                                type: 'TSF', line: i, content: `Mme/m detected but no valid address found next line.`,
+                                context: `Name: ${name} | Next: ${addr || "NONE"}`
+                            });
+                        } else if (!name) {
+                            // Valid Mme/m but empty name?
+                        } else {
+                            // console.log(`TSF Text Found: ${name} | ${addr} | ${trackingNum}`);
+                            const m = await createMarker(addr, name, trackingNum);
+                            if (m) foundCount++;
+                        }
+                    }
+                }
+            }
+            // LOGIC CAINIAO TEXT
+            else if (platform === 'CAINIAO_TEXT') {
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
+                    const trackingMatch = line.match(/\b(?:CN|DO|LO|CO|TF)[A-Z0-9]+HD\b/i);
+
+                    if (trackingMatch) {
+                        const trackingNum = trackingMatch[0];
+
+                        if (i >= 5) {
+                            const name = lines[i - 1];
+                            const rawAddr = lines[i - 4];
+                            const zipCity = lines[i - 5];
+
+                            if (zipCity.match(/^\d{5}/)) {
+                                const fullAddr = `${rawAddr}, ${zipCity}, France`;
+                                const m = await createMarker(fullAddr, name, trackingNum.slice(-4));
+                                if (m) foundCount++;
+                            } else {
+                                parsingErrors.push({
+                                    type: 'CAINIAO', line: i, content: `Tracking ${trackingNum} found but Zip/City invalid.`,
+                                    context: `Expected line ${i - 5} to be Zip. Found: "${zipCity}"`
+                                });
+                            }
+                        } else {
+                            parsingErrors.push({
+                                type: 'CAINIAO', line: i, content: `Tracking ${trackingNum} found but not enough previous lines.`,
+                                context: `Line index ${i} too small.`
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Handle Warning Icon
+            if (parsingErrors.length > 0) {
+                dom.warningBtn.style.display = 'flex';
+                dom.warningBtn.innerHTML = `⚠️ ${parsingErrors.length}`; // Show count
+                dom.warningBtn.style.width = 'auto'; // Allow expansion
+                dom.warningBtn.style.padding = '0 10px';
+
+                dom.warningBtn.onclick = () => {
+                    dom.warningModal.style.display = 'flex'; // Use style.display for modal class
+                    dom.warningList.innerHTML = parsingErrors.map(e => `
+                        <div class="search-result-item" style="border-left-color: #eab308; background:#333;">
+                            <div style="font-weight:bold; color:#eab308;">${e.type} Error (Line ${e.line})</div>
+                            <div style="color:white; margin:5px 0;">${e.content}</div>
+                            <div style="color:#aaa; font-size:12px;">${e.context}</div>
+                        </div>
+                    `).join('');
+                };
+            } else {
+                dom.warningBtn.style.display = 'none';
+            }
+            dom.warningClose.onclick = () => { dom.warningModal.style.display = 'none'; };
+
+            alert(`${foundCount} adresses trouvées !`);
+            performAutoSave();
+        };
         dom.other.onclick = () => { isAppending = false; setActiveMode('CSV'); dom.csvInput.click(); };
         document.getElementById('addImgBtn').onclick = () => {
             if (!platform) return alert("Selectionnez d'abord un mode (TSF/Cainiao)");
@@ -1637,6 +1810,17 @@
                             scannerUi.classList.remove('active');
                             searchInput.value = decodedText;
                             searchInput.dispatchEvent(new Event('input'));
+
+                            // AUTO-ACTION: Si correspondance exacte, on zoom dessus directement
+                            const exactMatch = allMarkers.find(m =>
+                                (m.custom.trackingNum || '').toUpperCase() === decodedText.trim().toUpperCase() ||
+                                m.custom.name.toUpperCase() === decodedText.trim().toUpperCase()
+                            );
+                            if (exactMatch) {
+                                map.setView([exactMatch.custom.pos.lat, exactMatch.custom.pos.lng], 18);
+                                exactMatch.openPopup();
+                                searchModal.classList.remove('active');
+                            }
                         }).catch(err => console.error(err));
                     }).catch(err => {
                         console.error(err);
@@ -1646,6 +1830,17 @@
                 }, 300);
             };
         }
+
+        // Support touche Entree dans la recherche
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const results = document.querySelectorAll('.search-result-item');
+                if (results.length > 0) {
+                    // Simuler le clic sur le premier resultat
+                    results[0].click();
+                }
+            }
+        });
 
         const scannerClose = document.getElementById('scannerClose');
         if (scannerClose) {
