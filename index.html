@@ -682,7 +682,7 @@
 
     <main>
         <div id="map"></div>
-        <div id="selectionBadge" class="badge">0 / 8</div>
+        <div id="selectionBadge" class="badge">0 / 0</div>
         <!-- Restart moved to header -->
         <div id="saveButton" class="save-icon" title="Sauvegardes">💾</div>
         <div id="warningButton" class="warning-icon" title="Erreurs de lecture">⚠️</div>
@@ -1178,8 +1178,8 @@
 
         function updateUI() {
             const n = selectedAddresses.length;
-            dom.badge.textContent = `${n} / 8`;
-            dom.validate.textContent = `Valider la selection (${n}/8)`;
+            dom.badge.textContent = `${n == 0 ? 0 : n} / ${allMarkers.length}`;
+            dom.validate.textContent = `Valider la selection (${n}/${allMarkers.length})`;
             dom.validate.classList.toggle('disabled', n === 0);
             renderSelectionList();
             performAutoSave(); // Save UI state
