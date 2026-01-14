@@ -361,6 +361,23 @@
             padding: 20px;
         }
 
+        #reader {
+            width: 100% !important;
+            max-width: 400px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        #reader video {
+            width: 100% !important;
+            height: auto !important;
+            max-height: 250px;
+            /* Limite la hauteur du flux video */
+            object-fit: cover;
+        }
+
         .search-modal.active {
             display: flex;
         }
@@ -2047,8 +2064,9 @@
                     }
                     html5QrcodeScanner = new Html5Qrcode("reader");
 
-                    // Exclusion des QR Codes et autres formats 2D pour ne prendre que les codes-barres de tracking (1D)
+                    // Formats de codes supportés (on remet le QR Code !)
                     const formatsToSupport = [
+                        Html5QrcodeSupportedFormats.QR_CODE,
                         Html5QrcodeSupportedFormats.CODE_128,
                         Html5QrcodeSupportedFormats.CODE_39,
                         Html5QrcodeSupportedFormats.CODE_93,
@@ -2062,12 +2080,7 @@
 
                     const config = {
                         fps: 20,
-                        qrbox: (viewfinderWidth, viewfinderHeight) => {
-                            // On prend 80% de la largeur mais on limite la hauteur pour forcer un scan horizontal (code-barres)
-                            const width = viewfinderWidth * 0.8;
-                            const height = 100;
-                            return { width, height };
-                        },
+                        qrbox: { width: 130, height: 130 }, // Zone de scan carrée 130x130
                         formatsToSupport: formatsToSupport
                     };
 
